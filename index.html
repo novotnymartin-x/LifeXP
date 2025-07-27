@@ -746,12 +746,15 @@
             if (currentPage === pageId && pages[pageId]?.classList.contains('active')) return;
             
             currentPage = pageId;
+            renderPageContent(); // Render content BEFORE making the page visible.
+
             Object.values(pages).forEach(p => p.classList.remove('active'));
-            if (pages[pageId]) pages[pageId].classList.add('active');
-            navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
+            if (pages[pageId]) {
+                pages[pageId].classList.add('active');
+            }
             
+            navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
             document.querySelector('main').style.overflowY = pageId === 'dashboard' ? 'hidden' : 'auto';
-            renderPageContent();
         }
 
         function listenForProfile() {
@@ -785,9 +788,17 @@
 
         function renderPageContent() {
             if (!userId) return;
-            if (currentPage === 'dashboard' && pages.dashboard.classList.contains('active')) renderDashboard();
-            else if (currentPage === 'log' && pages.log.classList.contains('active')) renderLogPage();
-            else if (currentPage === 'admin' && pages.admin.classList.contains('active')) renderAdminPage();
+            switch (currentPage) {
+                case 'dashboard':
+                    renderDashboard();
+                    break;
+                case 'log':
+                    renderLogPage();
+                    break;
+                case 'admin':
+                    renderAdminPage();
+                    break;
+            }
             lucide.createIcons();
         }
         
