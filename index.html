@@ -97,12 +97,15 @@
                         inset 0 1px 1px rgba(255,255,255,0.05);
             backdrop-filter: blur(24px) saturate(150%);
             -webkit-backdrop-filter: blur(24px) saturate(150%);
-            animation: card-fade-in 0.6s cubic-bezier(.21,.63,.35,1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
             transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
             position: relative;
             overflow: hidden;
+        }
+        
+        #page-dashboard .ui-card {
+            animation: card-fade-in 0.6s cubic-bezier(.21,.63,.35,1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
         }
         
         .ui-card::before {
