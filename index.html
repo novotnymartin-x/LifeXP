@@ -82,7 +82,6 @@
             flex-grow: 1;
             overflow-y: auto;
             height: 1px;
-            /* padding-top is now handled by JS to ensure it's always correct */
             padding-bottom: 0 !important;
         }
 
@@ -90,7 +89,6 @@
 
         ::-webkit-scrollbar { display: none; }
 
-        /* Enhanced Glassmorphism UI Card */
         .ui-card {
             background: rgba(28, 29, 40, 0.5);
             border-radius: 1.75rem;
@@ -103,7 +101,7 @@
             animation: card-fade-in 0.6s cubic-bezier(.21,.63,.35,1) forwards;
             opacity: 0;
             transform: translateY(20px);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -119,13 +117,18 @@
             opacity: 0;
             pointer-events: none;
         }
+        
+        .dashboard-card {
+            cursor: pointer;
+        }
 
-        .ui-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 40px var(--primary-glow);
+        .dashboard-card:hover {
+             border-color: rgba(167, 139, 250, 0.5);
+             transform: translateY(-5px) scale(1.02);
+             box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 40px var(--primary-glow);
         }
         
-        .ui-card:hover::before {
+        .dashboard-card:hover::before {
             transform: translate(-25%, -25%) scale(1);
             opacity: 1;
         }
@@ -134,7 +137,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Dashboard grid spacing */
         .grid { gap: 1rem !important; padding: 1rem 0.5rem !important; }
         
         @media (max-width: 600px) {
@@ -142,7 +144,6 @@
             .ui-card { border-radius: 1.25rem !important; padding: 1rem !important; }
         }
 
-        /* Navigation Bar */
         nav {
             position: fixed; top: 0; left: 0; right: 0; z-index: 40;
             width: 100%; max-width: 100vw;
@@ -182,7 +183,6 @@
         .nav-item i { transition: color 0.25s ease; }
         .nav-item span { font-size: 0.7rem; margin-top: 0.2rem; letter-spacing: 0.02em; }
 
-        /* Loader */
         .loader {
             width: 60px; height: 60px;
             border-radius: 50%;
@@ -197,7 +197,6 @@
             border-radius: 50%;
         }
 
-        /* Inputs & Buttons */
         input, select, textarea {
             background: rgba(30, 32, 45, 0.7) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -236,7 +235,6 @@
             text-shadow: 0 2px 10px rgba(196, 181, 253, 0.2);
         }
 
-        /* Modals */
         #confirmation-modal, #info-modal {
             background: rgba(13, 15, 18, 0.5) !important;
             backdrop-filter: blur(16px) saturate(120%);
@@ -254,7 +252,6 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Page Transitions */
         .page {
             display: none;
             animation: page-fade-out 0.3s ease forwards;
@@ -272,7 +269,6 @@
             to { opacity: 0; transform: translateY(-10px); }
         }
 
-        /* General Page Styling */
         #page-log, #page-admin {
             padding: 1.1rem !important;
         }
@@ -289,8 +285,6 @@
             padding-left: 0.75rem;
         }
         
-        #log-tasks-container > div,
-        #logged-today-container > div,
         #admin-tasks-list > div {
             background: rgba(45,55,72,0.55) !important;
             border-radius: 1.25rem !important;
@@ -301,11 +295,35 @@
             transition: all 0.25s ease;
         }
         
-        #log-tasks-container > div:hover,
         #admin-tasks-list > div:hover {
             transform: translateX(5px);
             border-color: rgba(167, 139, 250, 0.5) !important;
         }
+
+        .dashboard-card .details-view {
+            display: none;
+            animation: details-fade-in 0.4s ease forwards;
+        }
+        .dashboard-card.active .summary-view {
+            display: none;
+        }
+        .dashboard-card.active .details-view {
+            display: flex;
+        }
+        @keyframes details-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Drag and Drop styles */
+        .draggable {
+            cursor: grab;
+        }
+        .dragging {
+            opacity: 0.5;
+            background: rgba(60, 62, 80, 0.7);
+        }
+
     </style>
 </head>
 <body class="text-gray-200 antialiased">
@@ -322,7 +340,6 @@
         <!-- Login/Register Screen -->
         <div id="auth-screen" class="hidden fixed inset-0 bg-[#0D0F12] flex flex-col items-center justify-center z-40 p-6">
             
-            <!-- Login View -->
             <div id="login-view" class="w-full max-w-sm text-center">
                 <h1 class="text-5xl font-extrabold text-white mb-2">Life<span class="purple-gradient-text">XP</span></h1>
                 <p class="text-gray-400 mb-8">Vítejte zpět!</p>
@@ -345,7 +362,6 @@
                 </div>
             </div>
 
-            <!-- Registration View (hidden by default) -->
             <div id="register-view" class="hidden w-full max-w-sm text-center">
                 <h1 class="text-5xl font-extrabold text-white mb-2">Life<span class="purple-gradient-text">XP</span></h1>
                 <p class="text-gray-400 mb-8">Vytvořte si nový účet</p>
@@ -378,7 +394,6 @@
 
         <!-- Main Content Area -->
         <div id="main-content" class="hidden flex-grow w-full flex flex-col">
-            <!-- Top Navigation Bar -->
             <nav id="top-nav" class="fixed top-0 left-0 right-0 z-40 w-full max-w-lg mx-auto flex justify-around items-center px-2 py-2">
                 <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
                     <i data-lucide="layout-grid" class="w-6 h-6"></i>
@@ -395,74 +410,105 @@
             </nav>
 
             <main>
-                <!-- Page: Dashboard -->
                 <div id="page-dashboard" class="page">
                     <div class="grid grid-cols-2 grid-rows-4 gap-4 h-full px-2 pt-2 pb-4">
-                        <!-- 1. řádek: Obdélník (XP za 7 dní) -->
-                        <div class="ui-card col-span-2 flex flex-col justify-center items-center">
-                            <p class="text-xs text-gray-400 self-start mb-1">XP za posledních 7 dní</p>
-                            <div class="flex-grow w-full flex flex-col items-center justify-center">
-                                <canvas id="xp-chart" style="max-width:100%;max-height:70px;"></canvas>
-                                <div class="flex w-full justify-between mt-1 px-1 text-[11px] text-gray-400 font-semibold select-none pointer-events-none">
-                                    <span>Po</span><span>Út</span><span>St</span><span>Čt</span><span>Pá</span><span>So</span><span>Ne</span>
+                        
+                        <div class="ui-card col-span-2 flex flex-col justify-center items-center" data-card-type="xp-weekly">
+                            <div class="w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-sm font-bold self-start mb-1 text-violet-300">XP za posledních 7 dní</p>
+                                <div class="flex-grow w-full">
+                                    <canvas id="xp-chart"></canvas>
                                 </div>
                             </div>
                         </div>
-                        <!-- 2. řádek: 2x Čtverec (Celkové XP & Radar) -->
-                        <div class="ui-card flex flex-col items-center justify-center">
-                            <p class="text-xs text-gray-400 mb-1">Celkové XP</p>
-                            <span id="total-xp-display" class="text-4xl font-extrabold purple-gradient-text flex-grow flex items-center justify-center"></span>
-                        </div>
-                        <div class="ui-card flex flex-col items-center justify-center">
-                            <p class="text-xs text-gray-400 mb-1">Rozložení kategorií</p>
-                            <div class="w-full h-full flex-grow flex items-center justify-center">
-                                <canvas id="category-radar-chart" style="max-width:100%;max-height:80px;"></canvas>
+                        
+                        <div class="ui-card dashboard-card flex flex-col items-center justify-center" data-card-type="total-xp">
+                            <div class="summary-view w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-xs text-gray-400 mb-1">Celkové XP</p>
+                                <span id="total-xp-display" class="text-4xl font-extrabold purple-gradient-text flex-grow flex items-center justify-center"></span>
+                            </div>
+                            <div class="details-view w-full h-full flex-col justify-center text-sm text-left">
+                                <h4 class="text-base font-bold mb-2 text-violet-300">XP Statistiky</h4>
+                                <p class="flex justify-between"><span>Tento týden:</span> <span id="detail-xp-week" class="font-bold text-right"></span></p>
+                                <p class="flex justify-between"><span>Tento měsíc:</span> <span id="detail-xp-month" class="font-bold text-right"></span></p>
+                                <p class="flex justify-between"><span>Průměr/den:</span> <span id="detail-xp-avg" class="font-bold text-right"></span></p>
                             </div>
                         </div>
-                        <!-- 3. řádek: Obdélník (Týdenní přehled) -->
-                        <div class="ui-card col-span-2 flex flex-col items-center justify-center">
-                            <p class="text-xs text-gray-400 self-start mb-1">Týdenní přehled kategorií</p>
-                            <div class="flex-grow w-full flex items-center justify-center">
-                                <canvas id="weekly-category-barchart" style="max-width:100%;max-height:60px;"></canvas>
+
+                        <div class="ui-card dashboard-card flex flex-col items-center justify-center" data-card-type="category-radar">
+                            <div class="summary-view w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-xs text-gray-400 mb-1">Rozložení kategorií</p>
+                                <div class="w-full h-full flex-grow flex items-center justify-center">
+                                    <canvas id="category-radar-chart" style="max-width:100%;max-height:80px;"></canvas>
+                                </div>
+                            </div>
+                             <div class="details-view w-full h-full flex-col justify-center text-sm text-left">
+                                <h4 class="text-base font-bold mb-2 text-violet-300">Top Kategorie</h4>
+                                <div id="detail-top-categories" class="space-y-1"></div>
                             </div>
                         </div>
-                        <!-- 4. řádek: 2x Čtverec (Týdenní cíl & Nejlepší den) -->
-                        <div class="ui-card flex flex-col items-center justify-center">
-                            <p class="text-xs text-gray-400 mb-1">Týdenní cíl</p>
-                            <div class="w-full h-full flex-grow relative flex items-center justify-center">
-                                <canvas id="weekly-goal-chart" style="max-width:70px;max-height:70px;"></canvas>
-                                <div id="weekly-goal-text" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <span class="text-xl font-bold"></span>
+                        
+                        <div class="ui-card col-span-2 flex flex-col items-center justify-center" data-card-type="weekly-bar">
+                            <div class="w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-sm font-bold self-start mb-1 text-violet-300">XP tento týden podle kategorií</p>
+                                <div class="flex-grow w-full">
+                                    <canvas id="weekly-category-barchart"></canvas>
                                 </div>
                             </div>
                         </div>
-                        <div class="ui-card flex flex-col items-center justify-center">
-                            <p class="text-xs text-gray-400 mb-1">Nejlepší den</p>
-                            <span id="best-day-xp" class="text-2xl font-bold flex-grow flex items-center justify-center"></span>
+
+                        <div class="ui-card dashboard-card flex flex-col items-center justify-center" data-card-type="weekly-goal">
+                            <div class="summary-view w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-xs text-gray-400 mb-1">Týdenní cíl</p>
+                                <div class="w-full h-full flex-grow relative flex items-center justify-center">
+                                    <canvas id="weekly-goal-chart" style="max-width:70px;max-height:70px;"></canvas>
+                                    <div id="weekly-goal-text" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <span class="text-xl font-bold"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="details-view w-full h-full flex-col justify-center text-sm text-left">
+                                <h4 class="text-base font-bold mb-2 text-violet-300">Postup cíle</h4>
+                                <p class="flex justify-between"><span>Splněno:</span> <span id="detail-goal-progress" class="font-bold text-right"></span></p>
+                                <p class="flex justify-between"><span>Zbývá:</span> <span id="detail-goal-remaining" class="font-bold text-right"></span></p>
+                            </div>
+                        </div>
+
+                        <div class="ui-card dashboard-card flex flex-col items-center justify-center" data-card-type="best-day">
+                            <div class="summary-view w-full h-full flex flex-col items-center justify-center">
+                                <p class="text-xs text-gray-400 mb-1">Nejlepší den</p>
+                                <span id="best-day-xp" class="text-2xl font-bold flex-grow flex items-center justify-center"></span>
+                            </div>
+                            <div class="details-view w-full h-full flex-col justify-center text-sm text-left">
+                                <h4 class="text-base font-bold mb-2 text-violet-300">Detail nejlepšího dne</h4>
+                                <p class="flex justify-between"><span>Datum:</span> <span id="detail-best-day-date" class="font-bold text-right"></span></p>
+                                <p class="flex justify-between"><span>Získáno:</span> <span id="detail-best-day-xp" class="font-bold text-right"></span></p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Page: Daily Log -->
                 <div id="page-log" class="page">
                     <h1 class="font-bold">Denní záznam</h1>
                     <div class="ui-card mb-6">
                         <label for="log-date" class="block text-sm font-medium text-gray-400 mb-2">Datum záznamu</label>
                         <input type="date" id="log-date" class="w-full">
                     </div>
-                    <div class="space-y-4">
+                    <div class="space-y-6">
                         <div>
                             <h2 class="font-semibold">Dostupné úkoly</h2>
-                            <div id="log-tasks-container" class="space-y-3"></div>
+                            <div id="log-tasks-container" class="mt-4 space-y-3"></div>
                         </div>
                         <div>
-                            <h2 class="font-semibold">Dnes zaznamenáno</h2>
-                            <div id="logged-today-container" class="space-y-2"></div>
+                            <div id="logged-today-header" class="flex justify-between items-center">
+                                 <h2 class="font-semibold">Dnes zaznamenáno</h2>
+                                 <!-- Clear button will be injected here by JS -->
+                            </div>
+                            <div id="logged-today-container" class="mt-4 space-y-3"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Page: Admin -->
                 <div id="page-admin" class="page">
                     <h1 class="font-bold">Správa</h1>
                     <div class="ui-card mb-6">
@@ -501,7 +547,6 @@
         </div>
     </div>
     
-    <!-- Confirmation Modal -->
     <div id="confirmation-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
         <div class="ui-card w-full max-w-sm text-center">
             <h3 id="modal-title" class="text-lg font-bold mb-4">Opravdu smazat?</h3>
@@ -513,7 +558,6 @@
         </div>
     </div>
 
-    <!-- Info Modal -->
     <div id="info-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
         <div class="ui-card w-full max-w-md text-center relative">
             <button id="info-modal-close" class="absolute top-4 right-4 text-gray-500 hover:text-white">
@@ -528,7 +572,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, browserLocalPersistence, setPersistence, getAdditionalUserInfo } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, setDoc, serverTimestamp, writeBatch, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration
@@ -547,7 +591,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- GLOBAL STATE & UI ELEMENTS ---
         let userId = null;
         let userProfile = {};
         let currentPage = 'dashboard';
@@ -576,7 +619,6 @@
             Mind: '<i data-lucide="brain-circuit" class="w-6 h-6"></i>', Body: '<i data-lucide="heart-pulse" class="w-6 h-6"></i>', Work: '<i data-lucide="briefcase" class="w-6 h-6"></i>', Social: '<i data-lucide="users" class="w-6 h-6"></i>', Extra: '<i data-lucide="star" class="w-6 h-6"></i>',
         };
 
-        // --- LAYOUT ADJUSTMENT ---
         function adjustLayout() {
             const nav = document.getElementById('top-nav');
             const main = document.querySelector('main');
@@ -586,7 +628,6 @@
             }
         }
 
-        // --- AUTHENTICATION ---
         setPersistence(auth, browserLocalPersistence).catch((err) => {
             console.error("Chyba při nastavování persistence:", err);
         });
@@ -610,7 +651,6 @@
             }
         });
 
-        // --- AUTH FORMS ---
         function clearAuthErrors() {
             document.getElementById('login-error').textContent = '';
             document.getElementById('register-error').textContent = '';
@@ -628,10 +668,6 @@
                 await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
             } catch (err) {
                 errorDiv.textContent = 'Přihlášení se nezdařilo. Zkontrolujte e-mail a heslo.';
-                errorDiv.classList.add('shake');
-                emailInput.classList.add('input-error');
-                passwordInput.classList.add('input-error');
-                setTimeout(() => errorDiv.classList.remove('shake'), 500);
             }
         });
 
@@ -645,39 +681,23 @@
 
             if (passwordInput.value !== confirmPasswordInput.value) {
                 errorDiv.textContent = 'Hesla se neshodují.';
-                errorDiv.classList.add('shake');
-                passwordInput.classList.add('input-error');
-                confirmPasswordInput.classList.add('input-error');
-                setTimeout(() => errorDiv.classList.remove('shake'), 500);
                 return;
             }
 
             try {
-                await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-            } catch (err) {
-                let msg = 'Registrace se nezdařila. ';
-                if (err.code === 'auth/email-already-in-use') {
-                    msg = 'Tento e-mail je již registrován.';
-                    emailInput.classList.add('input-error');
-                } else if (err.code === 'auth/invalid-email') {
-                    msg = 'Zadejte prosím platný e-mail.';
-                    emailInput.classList.add('input-error');
-                } else if (err.code === 'auth/weak-password') {
-                    msg = 'Heslo musí mít alespoň 6 znaků.';
-                    passwordInput.classList.add('input-error');
-                    confirmPasswordInput.classList.add('input-error');
-                } else {
-                    msg += 'Zkontrolujte zadané údaje.';
-                    emailInput.classList.add('input-error');
-                    passwordInput.classList.add('input-error');
+                const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+                const additionalInfo = getAdditionalUserInfo(userCredential);
+                if (additionalInfo.isNewUser) {
+                    setTimeout(showInstallPrompt, 1500);
                 }
+            } catch (err) {
+                let msg = 'Registrace se nezdařila.';
+                if (err.code === 'auth/email-already-in-use') msg = 'Tento e-mail je již registrován.';
+                else if (err.code === 'auth/weak-password') msg = 'Heslo musí mít alespoň 6 znaků.';
                 errorDiv.textContent = msg;
-                errorDiv.classList.add('shake');
-                setTimeout(() => errorDiv.classList.remove('shake'), 500);
             }
         });
         
-        // --- AUTH VIEW TOGGLING ---
         document.getElementById('show-register-view').addEventListener('click', (e) => {
             e.preventDefault();
             clearAuthErrors();
@@ -692,7 +712,6 @@
             document.getElementById('login-view').classList.remove('hidden');
         });
 
-        // --- PASSWORD VISIBILITY TOGGLE ---
         document.querySelectorAll('.password-toggle').forEach(toggle => {
             toggle.addEventListener('click', () => {
                 const targetId = toggle.dataset.target;
@@ -701,13 +720,11 @@
                     const isPassword = passwordInput.type === 'password';
                     passwordInput.type = isPassword ? 'text' : 'password';
                     toggle.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>`;
-                    toggle.classList.toggle('text-violet-400', isPassword);
                     if (window.lucide) window.lucide.createIcons();
                 }
             });
         });
 
-        // --- INITIALIZATION ---
         function initializeAppState() {
             lucide.createIcons();
             setupEventListeners();
@@ -717,45 +734,29 @@
             listenForTasks();
             listenForLogs();
             checkWeeklySummary();
-            adjustLayout(); // Adjust layout on init
-            window.addEventListener('resize', adjustLayout); // Adjust on resize
+            adjustLayout();
+            window.addEventListener('resize', adjustLayout);
         }
 
-        // --- NAVIGATION ---
         function navigateTo(pageId) {
-            if (currentPage === pageId && pages[pageId] && pages[pageId].classList.contains('active')) return;
+            if (currentPage === pageId && pages[pageId]?.classList.contains('active')) return;
             
             currentPage = pageId;
             Object.values(pages).forEach(p => p.classList.remove('active'));
-            if (pages[pageId]) {
-                pages[pageId].classList.add('active');
-            }
+            if (pages[pageId]) pages[pageId].classList.add('active');
             navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
             
-            const mainEl = document.querySelector('main');
-            if (pageId === 'dashboard') {
-                mainEl.style.overflowY = 'hidden';
-            } else {
-                mainEl.style.overflowY = 'auto';
-            }
-
+            document.querySelector('main').style.overflowY = pageId === 'dashboard' ? 'hidden' : 'auto';
             renderPageContent();
         }
 
-        // --- DATA LISTENERS (REAL-TIME UPDATES) ---
         function listenForProfile() {
             if(!userId) return;
             const profileDocRef = doc(db, 'users', userId, 'profile', 'data');
             onSnapshot(profileDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    userProfile = docSnap.data();
-                } else {
-                    setDoc(profileDocRef, { nickname: 'Nováček', lastWeeklySummary: '' });
-                    userProfile = { nickname: 'Nováček', lastWeeklySummary: '' };
-                }
+                userProfile = docSnap.exists() ? docSnap.data() : { nickname: 'Nováček', lastWeeklySummary: '' };
+                if (!docSnap.exists()) setDoc(profileDocRef, userProfile);
                 document.getElementById('profile-nickname').value = userProfile.nickname || '';
-            }, (error) => {
-                console.error("Chyba při načítání profilu:", error);
             });
         }
 
@@ -763,10 +764,9 @@
             if (!userId) return;
             const tasksCollection = collection(db, 'users', userId, 'tasks');
             onSnapshot(tasksCollection, (snapshot) => {
-                tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => a.name.localeCompare(b.name));
+                tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                tasks.sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
                 renderPageContent();
-            }, (error) => {
-                console.error("Chyba při načítání úkolů:", error);
             });
         }
 
@@ -776,40 +776,34 @@
             onSnapshot(logsCollection, (snapshot) => {
                 logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPageContent();
-            }, (error) => {
-                console.error("Chyba při načítání záznamů:", error);
             });
         }
 
-        // --- RENDERING LOGIC ---
         function renderPageContent() {
             if (!userId) return;
-            // Only render the content of the current page
-            switch (currentPage) {
-                case 'dashboard': if(pages.dashboard.classList.contains('active')) renderDashboard(); break;
-                case 'log': if(pages.log.classList.contains('active')) renderLogPage(); break;
-                case 'admin': if(pages.admin.classList.contains('active')) renderAdminPage(); break;
-            }
+            if (currentPage === 'dashboard' && pages.dashboard.classList.contains('active')) renderDashboard();
+            else if (currentPage === 'log' && pages.log.classList.contains('active')) renderLogPage();
+            else if (currentPage === 'admin' && pages.admin.classList.contains('active')) renderAdminPage();
             lucide.createIcons();
         }
         
         function renderDashboard() {
-            const totalXpEl = document.getElementById('total-xp-display');
-            const currentXp = parseInt(totalXpEl.dataset.currentValue || '0', 10);
-            const totalXp = logs.reduce((sum, log) => sum + log.xp, 0);
-            animateValue(totalXpEl, currentXp, totalXp, 600);
-            totalXpEl.dataset.currentValue = totalXp;
+            renderDashboardSummaries();
+            renderDashboardDetails();
+        }
 
+        function renderDashboardSummaries() {
+            const totalXp = logs.reduce((sum, log) => sum + log.xp, 0);
+            animateValue(document.getElementById('total-xp-display'), 0, totalXp, 600);
+            
             const dailyXp = logs.reduce((acc, log) => {
                 acc[log.date] = (acc[log.date] || 0) + log.xp;
                 return acc;
             }, {});
             let bestDay = { date: '-', xp: 0 };
-            for (const [date, xp] of Object.entries(dailyXp)) {
-                if (xp > bestDay.xp) {
-                    bestDay = { date, xp };
-                }
-            }
+            Object.entries(dailyXp).forEach(([date, xp]) => {
+                if (xp > bestDay.xp) bestDay = { date, xp };
+            });
             document.getElementById('best-day-xp').textContent = bestDay.xp > 0 ? `${bestDay.xp} XP` : 'Žádná data';
 
             renderXpChart();
@@ -818,41 +812,84 @@
             renderWeeklyCategoryBarChart();
         }
 
+        function renderDashboardDetails() {
+            // Total XP Details
+            const { start: weekStart } = getWeekDateRange(new Date());
+            const weekStartString = weekStart.toISOString().split('T')[0];
+            const monthStartString = new Date(new Date().setDate(1)).toISOString().split('T')[0];
+            
+            const xpThisWeek = logs.filter(l => l.date >= weekStartString).reduce((sum, l) => sum + l.xp, 0);
+            const xpThisMonth = logs.filter(l => l.date >= monthStartString).reduce((sum, l) => sum + l.xp, 0);
+            const totalDays = logs.length > 0 ? (new Date() - new Date(logs[0].date)) / (1000 * 3600 * 24) + 1 : 1;
+            const avgXp = (logs.reduce((sum, l) => sum + l.xp, 0) / Math.max(1, totalDays)).toFixed(1);
+
+            document.getElementById('detail-xp-week').textContent = `${xpThisWeek} XP`;
+            document.getElementById('detail-xp-month').textContent = `${xpThisMonth} XP`;
+            document.getElementById('detail-xp-avg').textContent = `${avgXp} XP`;
+
+            // Top Categories Details
+            const categoryXP = logs.reduce((acc, log) => {
+                if (log.xp > 0) acc[log.category] = (acc[log.category] || 0) + log.xp;
+                return acc;
+            }, {});
+            const topCategories = Object.entries(categoryXP).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            const topCategoriesEl = document.getElementById('detail-top-categories');
+            topCategoriesEl.innerHTML = topCategories.map(([cat, xp]) => 
+                `<p class="flex justify-between">
+                    <span style="color:${categoryColors[cat]}">${cat}</span>
+                    <span class="font-bold">${xp} XP</span>
+                </p>`
+            ).join('') || '<p class="text-gray-400">Žádná data</p>';
+
+            // Weekly Goal Details
+            const tasksWithGoals = tasks.filter(t => t.goalFrequency > 0);
+            const totalGoal = tasksWithGoals.reduce((sum, t) => sum + t.goalFrequency, 0);
+            const thisWeekLogs = logs.filter(l => {
+                const task = tasks.find(t => t.id === l.taskId);
+                return l.date >= weekStartString && task && task.goalFrequency > 0;
+            });
+            const completedCount = thisWeekLogs.length;
+            document.getElementById('detail-goal-progress').textContent = `${completedCount} / ${totalGoal}`;
+            document.getElementById('detail-goal-remaining').textContent = `${Math.max(0, totalGoal - completedCount)}`;
+
+            // Best Day Details
+            const dailyXp = logs.reduce((acc, log) => {
+                acc[log.date] = (acc[log.date] || 0) + log.xp;
+                return acc;
+            }, {});
+            let bestDay = { date: '-', xp: 0 };
+            Object.entries(dailyXp).forEach(([date, xp]) => {
+                if (xp > bestDay.xp) bestDay = { date, xp };
+            });
+            document.getElementById('detail-best-day-date').textContent = bestDay.date === '-' ? '-' : new Date(bestDay.date).toLocaleDateString('cs-CZ');
+            document.getElementById('detail-best-day-xp').textContent = `${bestDay.xp} XP`;
+        }
+
         function renderCategoryRadarChart() {
             const ctx = document.getElementById('category-radar-chart').getContext('2d');
-            const positiveLogs = logs.filter(l => l.xp > 0);
             const data = Object.keys(categoryColors).map(cat =>
-                positiveLogs.filter(l => l.category === cat).reduce((sum, l) => sum + l.xp, 0)
+                logs.filter(l => l.category === cat && l.xp > 0).reduce((sum, l) => sum + l.xp, 0)
             );
-            if (window.radarChart) window.radarChart.destroy();
-            window.radarChart = new Chart(ctx, {
+            if (radarChart) radarChart.destroy();
+            radarChart = new Chart(ctx, {
                 type: 'radar',
-                data: {
-                    labels: Object.keys(categoryColors),
-                    datasets: [{
-                        data: data,
-                        backgroundColor: 'rgba(167,139,250,0.25)',
-                        borderColor: '#A78BFA',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#A78BFA',
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        fill: true,
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    animation: { duration: 800, easing: 'easeOutCubic' },
-                    scales: {
-                        r: {
+                data: { labels: Object.keys(categoryColors), datasets: [{ data, backgroundColor: 'rgba(167,139,250,0.25)', borderColor: '#A78BFA', borderWidth: 2 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
+                    scales: { 
+                        r: { 
+                            display: true,
+                            pointLabels: {
+                                color: '#C4B5FD',
+                                font: { size: 10, weight: 'bold' }
+                            },
                             angleLines: { color: 'rgba(255,255,255,0.1)' },
                             grid: { color: 'rgba(255,255,255,0.1)' },
-                            pointLabels: { color: '#C4B5FD', font: { size: 10, weight: 'bold' } },
-                            ticks: { display: false, stepSize: Math.max(...data) > 0 ? Math.ceil(Math.max(...data) / 3) : 1, backdropColor: 'transparent' }
-                        }
-                    }
+                            ticks: { display: false, backdropColor: 'transparent' }
+                        } 
+                    } 
                 }
             });
         }
@@ -863,32 +900,21 @@
             const textEl = document.getElementById('weekly-goal-text').firstElementChild;
             if (tasksWithGoals.length === 0) {
                 textEl.textContent = 'N/A';
-                if (window.weeklyGoalChart) window.weeklyGoalChart.destroy();
+                if (weeklyGoalChart) weeklyGoalChart.destroy();
                 return;
             }
             const totalGoal = tasksWithGoals.reduce((sum, t) => sum + t.goalFrequency, 0);
             const { start } = getWeekDateRange(new Date());
             const startOfWeekString = start.toISOString().split('T')[0];
-            
-            const thisWeekLogs = logs.filter(l => {
-                const task = tasks.find(t => t.id === l.taskId);
-                return l.date >= startOfWeekString && task && task.goalFrequency > 0;
-            });
-
+            const thisWeekLogs = logs.filter(l => l.date >= startOfWeekString && tasks.find(t => t.id === l.taskId)?.goalFrequency > 0);
             const completedCount = thisWeekLogs.length;
             const percentage = totalGoal > 0 ? Math.min(100, Math.round((completedCount / totalGoal) * 100)) : 0;
             textEl.textContent = `${percentage}%`;
 
-            if (window.weeklyGoalChart) window.weeklyGoalChart.destroy();
-            window.weeklyGoalChart = new Chart(ctx, {
+            if (weeklyGoalChart) weeklyGoalChart.destroy();
+            weeklyGoalChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [completedCount, Math.max(0, totalGoal - completedCount)],
-                        backgroundColor: ['#A78BFA', 'rgba(255,255,255,0.1)'],
-                        borderColor: 'transparent', borderWidth: 0, borderRadius: 8, cutout: '80%',
-                    }]
-                },
+                data: { datasets: [{ data: [completedCount, Math.max(0, totalGoal - completedCount)], backgroundColor: ['#A78BFA', 'rgba(255,255,255,0.1)'], borderWidth: 0, borderRadius: 8, cutout: '80%' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
             });
         }
@@ -896,69 +922,47 @@
         function renderXpChart() {
             const ctx = document.getElementById('xp-chart').getContext('2d');
             const dayLabels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-            const labels = [...Array(7)].map((_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (6 - i));
-                return d;
-            });
-            const data = labels.map(date => {
-                const dateString = date.toISOString().split('T')[0];
-                return logs.filter(log => log.date === dateString).reduce((sum, log) => sum + log.xp, 0);
-            });
-            if (window.xpChart) window.xpChart.destroy();
-            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
-            gradient.addColorStop(0, 'rgba(167, 139, 250, 0.5)');
-            gradient.addColorStop(1, 'rgba(167, 139, 250, 0)');
-            window.xpChart = new Chart(ctx, {
+            const labels = [...Array(7)].map((_, i) => new Date(new Date().setDate(new Date().getDate() - (6 - i))).toISOString().split('T')[0]);
+            const data = labels.map(dateString => logs.filter(log => log.date === dateString).reduce((sum, log) => sum + log.xp, 0));
+            
+            if (xpChart) xpChart.destroy();
+            xpChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: dayLabels,
-                    datasets: [{
-                        label: 'XP', data: data, borderColor: '#A78BFA',
-                        backgroundColor: gradient, fill: true, tension: 0.4,
-                        pointBackgroundColor: '#fff', pointBorderColor: '#A78BFA',
-                        pointRadius: 3, pointHoverRadius: 5,
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: { x: { display: false }, y: { display: false } }
+                data: { labels: dayLabels, datasets: [{ label: 'XP', data, borderColor: '#A78BFA', tension: 0.4, pointBackgroundColor: '#fff', pointBorderColor: '#A78BFA' }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { display: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#9CA3AF' } }, 
+                        y: { display: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#9CA3AF' } } 
+                    } 
                 }
             });
         }
 
         function renderWeeklyCategoryBarChart() {
-            const ctx = document.getElementById('weekly-category-barchart')?.getContext('2d');
-            if (!ctx) return;
-
+            const ctx = document.getElementById('weekly-category-barchart').getContext('2d');
             const { start } = getWeekDateRange(new Date());
             const startOfWeekString = start.toISOString().split('T')[0];
             const thisWeekLogs = logs.filter(l => l.date >= startOfWeekString && l.xp > 0);
-            const data = Object.keys(categoryColors).map(cat =>
-                thisWeekLogs.filter(l => l.category === cat).reduce((sum, l) => sum + l.xp, 0)
-            );
+            const data = Object.keys(categoryColors).map(cat => thisWeekLogs.filter(l => l.category === cat).reduce((sum, l) => sum + l.xp, 0));
             const labels = Object.keys(categoryColors);
-
-            if (window.weeklyCategoryBarChart) window.weeklyCategoryBarChart.destroy();
-            window.weeklyCategoryBarChart = new Chart(ctx, {
+            
+            if (weeklyCategoryBarChart) weeklyCategoryBarChart.destroy();
+            weeklyCategoryBarChart = new Chart(ctx, { 
                 type: 'bar',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: Object.values(categoryColors), borderRadius: 4 }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)', borderColor: 'transparent' },
-                            ticks: { color: '#9CA3AF', font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { display: false, borderColor: 'transparent' },
-                            ticks: { color: '#9CA3AF', font: { size: 10 } }
-                        }
+                data: { labels, datasets: [{ data, backgroundColor: Object.values(categoryColors), borderRadius: 4 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    indexAxis: 'y', 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9CA3AF' } }, 
+                        y: { grid: { display: false }, ticks: { color: '#9CA3AF' } } 
                     }
-                }
+                } 
             });
         }
         
@@ -966,20 +970,28 @@
             const selectedDate = logDateInput.value;
             const tasksContainer = document.getElementById('log-tasks-container');
             const loggedTodayContainer = document.getElementById('logged-today-container');
+            const loggedTodayHeader = document.getElementById('logged-today-header');
             
             tasksContainer.innerHTML = '';
             loggedTodayContainer.innerHTML = '';
+            
+            const existingClearBtn = loggedTodayHeader.querySelector('.clear-day-btn');
+            if(existingClearBtn) existingClearBtn.remove();
 
             const loggedTaskIdsForDate = logs.filter(l => l.date === selectedDate).map(l => l.taskId);
 
             tasks.forEach(task => {
                 const isLogged = loggedTaskIdsForDate.includes(task.id);
                 const taskEl = document.createElement('div');
-                taskEl.className = `flex items-center justify-between`;
+                taskEl.className = 'flex items-center justify-between p-3 rounded-2xl bg-gray-800/50 border border-gray-700/50 draggable';
+                taskEl.setAttribute('draggable', 'true');
+                taskEl.dataset.taskId = task.id;
+
                 taskEl.innerHTML = `
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 flex-grow">
+                        <i data-lucide="grip-vertical" class="cursor-grab text-gray-500"></i>
                         <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
-                        <div>
+                        <div class="flex-grow">
                             <p class="font-semibold text-white">${task.name}</p>
                             <p class="text-sm ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</p>
                         </div>
@@ -995,17 +1007,20 @@
             if (logsForDate.length === 0) {
                 loggedTodayContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Dnes zatím žádné záznamy.</p>';
             } else {
+                const clearButton = document.createElement('button');
+                clearButton.className = 'clear-day-btn text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-1';
+                clearButton.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i> Vymazat vše';
+                loggedTodayHeader.appendChild(clearButton);
+
                 logsForDate.forEach(log => {
                     const task = tasks.find(t => t.id === log.taskId);
                     const logEl = document.createElement('div');
-                    logEl.className = 'flex items-center justify-between';
-                    logEl.innerHTML = `
-                        <p>${task ? task.name : 'Smazaný úkol'}</p>
-                        <span class="font-bold ${log.xp > 0 ? 'text-green-400' : 'text-red-400'}">${log.xp > 0 ? '+' : ''}${log.xp} XP</span>
-                    `;
+                    logEl.className = 'flex items-center justify-between p-3 rounded-2xl bg-gray-800/50 border border-gray-700/50';
+                    logEl.innerHTML = `<div class="flex items-center gap-4"><div style="color: ${task ? categoryColors[task.category] : '#9CA3AF'}">${task ? categoryIcons[task.category] : '<i data-lucide="help-circle" class="w-6 h-6"></i>'}</div><p>${task ? task.name : 'Smazaný úkol'}</p></div><span class="font-bold ${log.xp > 0 ? 'text-green-400' : 'text-red-400'}">${log.xp > 0 ? '+' : ''}${log.xp} XP</span>`;
                     loggedTodayContainer.appendChild(logEl);
                 });
             }
+             lucide.createIcons();
         }
 
         function renderAdminPage() {
@@ -1017,74 +1032,92 @@
             }
             tasks.forEach(task => {
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between';
-                taskEl.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
-                        <div>
-                            <p class="font-semibold">${task.name}</p>
-                            <p class="text-sm text-gray-400">Cíl: ${task.goalFrequency > 0 ? `${task.goalFrequency}x týdně` : 'Není'}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</span>
-                        <button data-task-id="${task.id}" class="delete-task-btn p-2 text-gray-400 hover:text-red-400 transition-colors">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                `;
+                taskEl.innerHTML = `<div class="flex items-center gap-3"><div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div><div><p class="font-semibold">${task.name}</p><p class="text-sm text-gray-400">Cíl: ${task.goalFrequency > 0 ? `${task.goalFrequency}x týdně` : 'Není'}</p></div></div><div class="flex items-center gap-2"><span class="font-bold ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</span><button data-task-id="${task.id}" class="delete-task-btn p-2 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>`;
                 tasksList.appendChild(taskEl);
             });
         }
 
-        // --- EVENT LISTENERS ---
         function setupEventListeners() {
-            navItems.forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navigateTo(item.dataset.page);
-                });
-            });
-
+            navItems.forEach(item => item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.page); }));
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-            
             document.getElementById('add-task-form').addEventListener('submit', handleAddTask);
             document.getElementById('edit-profile-form').addEventListener('submit', handleEditProfile);
             
             document.getElementById('admin-tasks-list').addEventListener('click', e => {
-                if (e.target.closest('.delete-task-btn')) {
-                    const taskId = e.target.closest('.delete-task-btn').dataset.taskId;
-                    showConfirmationModal('Smazat úkol?', 'Opravdu chcete smazat tento úkol a všechny jeho záznamy? Tuto akci nelze vrátit.', () => handleDeleteTask(taskId));
-                }
+                const btn = e.target.closest('.delete-task-btn');
+                if (btn) showConfirmationModal('Smazat úkol?', 'Opravdu chcete smazat tento úkol a všechny jeho záznamy?', () => handleDeleteTask(btn.dataset.taskId));
             });
 
             logDateInput.addEventListener('change', renderLogPage);
 
-            document.getElementById('log-tasks-container').addEventListener('click', async e => {
+            const tasksContainer = document.getElementById('log-tasks-container');
+            tasksContainer.addEventListener('click', async e => {
                 const button = e.target.closest('.log-task-btn');
                 if (button) {
                     const taskId = button.dataset.taskId;
                     const selectedDate = logDateInput.value;
                     const existingLog = logs.find(l => l.date === selectedDate && l.taskId === taskId);
-                    
-                    if (existingLog) {
-                        await deleteDoc(doc(db, 'users', userId, 'logs', existingLog.id));
-                    } else {
+                    if (existingLog) await deleteDoc(doc(db, 'users', userId, 'logs', existingLog.id));
+                    else {
                         const task = tasks.find(t => t.id === taskId);
-                        if (task) {
-                            await addDoc(collection(db, 'users', userId, 'logs'), {
-                                taskId: task.id,
-                                date: selectedDate,
-                                xp: task.xp,
-                                category: task.category,
-                                timestamp: serverTimestamp()
-                            });
-                        }
+                        if (task) await addDoc(collection(db, 'users', userId, 'logs'), { taskId: task.id, date: selectedDate, xp: task.xp, category: task.category, timestamp: serverTimestamp() });
                     }
                 }
             });
 
-            // Modal listeners
+            // Drag and Drop Logic
+            let draggedItem = null;
+            tasksContainer.addEventListener('dragstart', e => {
+                draggedItem = e.target;
+                setTimeout(() => e.target.classList.add('dragging'), 0);
+            });
+
+            tasksContainer.addEventListener('dragend', e => {
+                draggedItem.classList.remove('dragging');
+                draggedItem = null;
+                updateTaskOrder();
+            });
+
+            tasksContainer.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(tasksContainer, e.clientY);
+                const dragging = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    tasksContainer.appendChild(dragging);
+                } else {
+                    tasksContainer.insertBefore(dragging, afterElement);
+                }
+            });
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            document.getElementById('page-log').addEventListener('click', e => {
+                const clearBtn = e.target.closest('.clear-day-btn');
+                if (clearBtn) {
+                    showConfirmationModal('Smazat všechny záznamy?', `Opravdu chcete smazat všechny záznamy pro datum ${new Date(logDateInput.value).toLocaleDateString('cs-CZ')}?`, handleClearDayLogs);
+                }
+            });
+
+            document.getElementById('page-dashboard').addEventListener('click', (e) => {
+                const clickedCard = e.target.closest('.dashboard-card');
+                if (!clickedCard) return;
+                const allCards = document.querySelectorAll('#page-dashboard .dashboard-card');
+                const wasActive = clickedCard.classList.contains('active');
+                allCards.forEach(card => card.classList.remove('active'));
+                if (!wasActive) clickedCard.classList.add('active');
+            });
+
             document.getElementById('modal-cancel').addEventListener('click', hideConfirmationModal);
             document.getElementById('info-modal-close').addEventListener('click', hideInfoModal);
             document.getElementById('modal-confirm').addEventListener('click', () => {
@@ -1093,7 +1126,6 @@
             });
         }
         
-        // --- ACTION HANDLERS ---
         async function handleAddTask(e) {
             e.preventDefault();
             const form = e.target;
@@ -1101,22 +1133,28 @@
             const category = form.querySelector('#task-category').value;
             const xp = parseInt(form.querySelector('#task-xp').value, 10);
             const goalFrequency = parseInt(form.querySelector('#task-goal').value, 10) || 0;
-
             if (name && !isNaN(xp)) {
-                await addDoc(collection(db, 'users', userId, 'tasks'), {
-                    name, category, xp, goalFrequency,
-                    createdAt: serverTimestamp()
-                });
+                await addDoc(collection(db, 'users', userId, 'tasks'), { name, category, xp, goalFrequency, order: tasks.length, createdAt: serverTimestamp() });
                 form.reset();
             }
+        }
+
+        async function updateTaskOrder() {
+            const taskElements = [...document.getElementById('log-tasks-container').children];
+            const batch = writeBatch(db);
+            taskElements.forEach((el, index) => {
+                const taskId = el.dataset.taskId;
+                const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+                batch.update(taskRef, { order: index });
+            });
+            await batch.commit();
         }
 
         async function handleEditProfile(e) {
             e.preventDefault();
             const nickname = document.getElementById('profile-nickname').value.trim();
             if (nickname) {
-                const profileDocRef = doc(db, 'users', userId, 'profile', 'data');
-                await setDoc(profileDocRef, { nickname }, { merge: true });
+                await setDoc(doc(db, 'users', userId, 'profile', 'data'), { nickname }, { merge: true });
                 showInfoModal('Profil uložen', 'Vaše přezdívka byla úspěšně aktualizována.');
             }
         }
@@ -1124,17 +1162,25 @@
         async function handleDeleteTask(taskId) {
             if (!userId || !taskId) return;
             const batch = writeBatch(db);
-            const taskRef = doc(db, 'users', userId, 'tasks', taskId);
-            batch.delete(taskRef);
-            const logsQuery = query(collection(db, 'users', userId, 'logs'), where("taskId", "==", taskId));
-            const logsSnapshot = await getDocs(logsQuery);
-            logsSnapshot.forEach(logDoc => {
-                batch.delete(logDoc.ref);
+            batch.delete(doc(db, 'users', userId, 'tasks', taskId));
+            const logsSnapshot = await getDocs(query(collection(db, 'users', userId, 'logs'), where("taskId", "==", taskId)));
+            logsSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
+            await batch.commit();
+        }
+
+        async function handleClearDayLogs() {
+            const selectedDate = logDateInput.value;
+            const logsToDelete = logs.filter(l => l.date === selectedDate);
+            if (logsToDelete.length === 0) return;
+
+            const batch = writeBatch(db);
+            logsToDelete.forEach(log => {
+                const logRef = doc(db, 'users', userId, 'logs', log.id);
+                batch.delete(logRef);
             });
             await batch.commit();
         }
 
-        // --- MODALS ---
         function showConfirmationModal(title, text, callback) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-text').textContent = text;
@@ -1157,18 +1203,17 @@
             infoModal.classList.add('hidden');
         }
 
-        // --- UTILITY FUNCTIONS ---
+        function showInstallPrompt() {
+            showInfoModal('Přidejte si LifeXP na plochu', 'Pro nejlepší zážitek si aplikaci přidejte na plochu.\n\nPostup:\n1. V prohlížeči klepněte na Sdílet.\n2. Vyberte "Přidat na plochu".');
+        }
+
         function getWeekDateRange(date) {
             const start = new Date(date);
-            const day = start.getDay();
-            const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-            start.setDate(diff);
+            start.setDate(start.getDate() - start.getDay() + (start.getDay() === 0 ? -6 : 1));
             start.setHours(0, 0, 0, 0);
-
             const end = new Date(start);
             end.setDate(start.getDate() + 6);
             end.setHours(23, 59, 59, 999);
-            
             return { start, end };
         }
 
@@ -1178,58 +1223,39 @@
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString('cs-CZ');
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
+                if (progress < 1) window.requestAnimationFrame(step);
             };
             window.requestAnimationFrame(step);
         }
 
         async function checkWeeklySummary() {
-            const today = new Date();
-            // Check on Monday
-            if (today.getDay() !== 1) return;
-
-            const { start } = getWeekDateRange(today);
+            if (new Date().getDay() !== 1) return;
+            const { start } = getWeekDateRange(new Date());
             const weekId = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
-            
             if (userProfile.lastWeeklySummary === weekId) return;
 
-            const lastWeek = new Date(today);
-            lastWeek.setDate(today.getDate() - 7);
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
             const { start: lastWeekStart, end: lastWeekEnd } = getWeekDateRange(lastWeek);
-            
             const lastWeekLogs = logs.filter(l => l.date >= lastWeekStart.toISOString().split('T')[0] && l.date <= lastWeekEnd.toISOString().split('T')[0]);
             
             if (lastWeekLogs.length > 0) {
                 const totalXp = lastWeekLogs.reduce((sum, l) => sum + l.xp, 0);
                 const tasksCompleted = lastWeekLogs.length;
-                const categories = [...new Set(lastWeekLogs.map(l => l.category))];
-
-                let summaryText = `Minulý týden jsi získal(a) ${totalXp} XP!\n`;
-                summaryText += `Dokončil(a) jsi ${tasksCompleted} úkolů.\n`;
-                summaryText += `Nejvíce jsi se zaměřil(a) na kategorie: ${categories.join(', ')}.\n\nJen tak dál!`;
-                
-                showInfoModal('Týdenní shrnutí', summaryText);
+                const categories = [...new Set(lastWeekLogs.map(l => l.category))].join(', ');
+                showInfoModal('Týdenní shrnutí', `Minulý týden jsi získal(a) ${totalXp} XP!\nDokončil(a) jsi ${tasksCompleted} úkolů.\nNejvíce jsi se zaměřil(a) na kategorie: ${categories}.\n\nJen tak dál!`);
             }
-
-            const profileDocRef = doc(db, 'users', userId, 'profile', 'data');
-            await setDoc(profileDocRef, { lastWeeklySummary: weekId }, { merge: true });
+            await setDoc(doc(db, 'users', userId, 'profile', 'data'), { lastWeeklySummary: weekId }, { merge: true });
         }
         
     </script>
     
-    <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(err => {
-                        console.error('Service Worker registration failed:', err);
-                    });
+                    .then(reg => console.log('SW registered:', reg))
+                    .catch(err => console.error('SW registration failed:', err));
             });
         }
     </script>
