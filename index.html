@@ -145,15 +145,19 @@
         }
 
         nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-            width: 100%; max-width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            width: 100%;
             background: rgba(20, 21, 30, 0.65);
             box-shadow: 0 0 24px rgba(0,0,0,0.5);
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 0 0 1.5rem 1.5rem;
-            padding-top: env(safe-area-inset-top, 12px);
+            padding-top: env(safe-area-inset-top, 0px);
             padding-bottom: 0;
         }
 
@@ -394,19 +398,21 @@
 
         <!-- Main Content Area -->
         <div id="main-content" class="hidden flex-grow w-full flex flex-col">
-            <nav id="top-nav" class="fixed top-0 left-0 right-0 z-40 w-full max-w-lg mx-auto flex justify-around items-center px-2 py-2">
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
-                    <i data-lucide="layout-grid" class="w-6 h-6"></i>
-                    <span class="text-xs">Přehled</span>
-                </a>
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="log">
-                    <i data-lucide="check-square" class="w-6 h-6"></i>
-                    <span class="text-xs">Denní</span>
-                </a>
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="admin">
-                    <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
-                    <span class="text-xs">Správa</span>
-                </a>
+            <nav id="top-nav">
+                <div class="max-w-lg mx-auto flex justify-around items-center px-2 py-2">
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
+                        <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                        <span class="text-xs">Přehled</span>
+                    </a>
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="log">
+                        <i data-lucide="check-square" class="w-6 h-6"></i>
+                        <span class="text-xs">Denní</span>
+                    </a>
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="admin">
+                        <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
+                        <span class="text-xs">Správa</span>
+                    </a>
+                </div>
             </nav>
 
             <main>
@@ -991,12 +997,10 @@
                     <div class="flex items-center gap-4 flex-grow">
                         <i data-lucide="grip-vertical" class="cursor-grab text-gray-500"></i>
                         <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
-                        <div class="flex-grow">
-                            <p class="font-semibold text-white">${task.name}</p>
-                            <p class="text-sm ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</p>
-                        </div>
+                        <p class="font-semibold text-white flex-grow">${task.name}</p>
+                        <p class="text-sm font-semibold w-20 text-right ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</p>
                     </div>
-                    <button data-task-id="${task.id}" class="log-task-btn p-2 rounded-full ${isLogged ? 'bg-gray-600' : 'purple-gradient'}">
+                    <button data-task-id="${task.id}" class="log-task-btn p-2 rounded-full ${isLogged ? 'bg-gray-600' : 'purple-gradient'} ml-2">
                         <i data-lucide="${isLogged ? 'rotate-ccw' : 'plus'}" class="w-6 h-6 text-white"></i>
                     </button>
                 `;
@@ -1065,29 +1069,8 @@
                 }
             });
 
-            // Drag and Drop Logic
+            // --- Drag and Drop Logic for Task Reordering ---
             let draggedItem = null;
-            tasksContainer.addEventListener('dragstart', e => {
-                draggedItem = e.target;
-                setTimeout(() => e.target.classList.add('dragging'), 0);
-            });
-
-            tasksContainer.addEventListener('dragend', e => {
-                draggedItem.classList.remove('dragging');
-                draggedItem = null;
-                updateTaskOrder();
-            });
-
-            tasksContainer.addEventListener('dragover', e => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(tasksContainer, e.clientY);
-                const dragging = document.querySelector('.dragging');
-                if (afterElement == null) {
-                    tasksContainer.appendChild(dragging);
-                } else {
-                    tasksContainer.insertBefore(dragging, afterElement);
-                }
-            });
 
             function getDragAfterElement(container, y) {
                 const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
@@ -1101,6 +1084,32 @@
                     }
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
+
+            tasksContainer.addEventListener('dragstart', e => {
+                draggedItem = e.target;
+                setTimeout(() => draggedItem.classList.add('dragging'), 0);
+            });
+
+            tasksContainer.addEventListener('dragend', () => {
+                if(draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    updateTaskOrder();
+                    draggedItem = null;
+                }
+            });
+
+            tasksContainer.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(tasksContainer, e.clientY);
+                const dragging = document.querySelector('.dragging');
+                if (dragging) {
+                    if (afterElement == null) {
+                        tasksContainer.appendChild(dragging);
+                    } else {
+                        tasksContainer.insertBefore(dragging, afterElement);
+                    }
+                }
+            });
 
             document.getElementById('page-log').addEventListener('click', e => {
                 const clearBtn = e.target.closest('.clear-day-btn');
