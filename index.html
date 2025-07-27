@@ -750,7 +750,9 @@
 
             Object.values(pages).forEach(p => p.classList.remove('active'));
             if (pages[pageId]) {
-                pages[pageId].classList.add('active');
+                requestAnimationFrame(() => {
+                    pages[pageId].classList.add('active');
+                });
             }
             
             navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
