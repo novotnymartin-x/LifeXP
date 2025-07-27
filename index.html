@@ -29,202 +29,288 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap');
+        
+        :root {
+            --bg-color: #0D0F12;
+            --primary-glow: rgba(199, 172, 255, 0.5);
+            --secondary-glow: rgba(107, 33, 168, 0.7);
+        }
+
         html, body {
             font-family: 'Nunito', system-ui, sans-serif;
-            background-color: #0D0F12;
+            background-color: var(--bg-color);
+            color: #E5E7EB;
             overscroll-behavior-y: none;
-            -webkit-user-select: none;
-            user-select: none;
+            -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            min-height: 100vh;
-            height: 100dvh;
+            min-height: 100vh; height: 100dvh;
+            overflow: hidden;
         }
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100dvh;
-            height: 100dvh;
-            overflow: hidden; /* Prevent scrolling on body */
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 15% 25%, var(--primary-glow) 0%, transparent 25%),
+                        radial-gradient(circle at 85% 75%, var(--secondary-glow) 0%, transparent 25%);
+            opacity: 0.3;
+            filter: blur(100px);
+            z-index: -1;
+            animation: background-pan 25s linear infinite;
         }
-        body::-webkit-scrollbar { display: none; }
+
+        @keyframes background-pan {
+            0% { transform: translate(0, 10%) scale(1.2); }
+            25% { transform: translate(-5%, -10%) scale(1.3); }
+            50% { transform: translate(10%, 5%) scale(1.1); }
+            75% { transform: translate(5%, -5%) scale(1.4); }
+            100% { transform: translate(0, 10%) scale(1.2); }
+        }
+
         input, button, select, textarea {
             font-family: inherit;
             font-size: 1rem;
         }
-        /* Prevent text selection on tap */
-        *:not(input):not(textarea) {
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        
+
         #app {
-            padding-top: env(safe-area-inset-top);
-            padding-right: env(safe-area-inset-right);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
+            padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 8px);
             height: 100dvh;
+            box-sizing: border-box;
         }
 
-        /* Ensure the main content area can scroll on other pages if needed, but not the dashboard */
         main {
             flex-grow: 1;
             overflow-y: auto;
-            height: 1px; /* Fix for flex-grow in some browsers */
+            height: 1px;
+            padding-top: calc(60px + env(safe-area-inset-top, 12px)) !important;
+            padding-bottom: 0 !important;
         }
-        
-        #page-dashboard {
-            height: 100%;
+
+        #page-dashboard { height: 100%; overflow: hidden; }
+
+        ::-webkit-scrollbar { display: none; }
+
+        /* Enhanced Glassmorphism UI Card */
+        .ui-card {
+            background: rgba(28, 29, 40, 0.5);
+            border-radius: 1.75rem;
+            padding: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 
+                        inset 0 1px 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            animation: card-fade-in 0.6s cubic-bezier(.21,.63,.35,1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
             overflow: hidden;
         }
+        
+        .ui-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 150%; height: 150%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.15) 0%, transparent 40%);
+            transform: translate(-25%, -25%) scale(0);
+            transition: transform 0.6s cubic-bezier(.21,.63,.35,1);
+            opacity: 0;
+            pointer-events: none;
+        }
 
-        /* Custom scrollbar for a sleeker look */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0D0F12; }
-        ::-webkit-scrollbar-thumb { background: #2D3748; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4A5568; }
-
-        /* Styles for the navigation bar */
-        .nav-item.active svg { color: #A78BFA; }
-        .nav-item.active {
-            background-color: rgba(167, 139, 250, 0.1);
+        .ui-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 40px var(--primary-glow);
         }
         
-        /* Loading spinner */
+        .ui-card:hover::before {
+            transform: translate(-25%, -25%) scale(1);
+            opacity: 1;
+        }
+
+        @keyframes card-fade-in {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard grid spacing */
+        .grid { gap: 1rem !important; padding: 1rem 0.5rem !important; }
+        
+        @media (max-width: 600px) {
+            .grid { gap: 0.75rem !important; padding: 0.75rem 0.25rem !important; }
+            .ui-card { border-radius: 1.25rem !important; padding: 1rem !important; }
+        }
+
+        /* Navigation Bar */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+            width: 100%; max-width: 100vw;
+            background: rgba(20, 21, 30, 0.65) !important;
+            box-shadow: 0 0 24px rgba(0,0,0,0.5);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 0 0 1.5rem 1.5rem;
+            padding-top: env(safe-area-inset-top, 12px);
+            padding-bottom: 0;
+        }
+
+        .nav-item {
+            border-radius: 1rem; color: #9CA3AF; font-weight: 600;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        
+        .nav-item.active {
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 4px;
+            background: linear-gradient(90deg, #A78BFA, #C4B5FD);
+            border-radius: 2px;
+            box-shadow: 0 0 12px #A78BFA;
+        }
+        
+        .nav-item i { transition: color 0.25s ease; }
+        .nav-item span { font-size: 0.7rem; margin-top: 0.2rem; letter-spacing: 0.02em; }
+
+        /* Loader */
         .loader {
-            border: 4px solid #4A5568;
-            border-top: 4px solid #A78BFA;
+            width: 60px; height: 60px;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            background: conic-gradient(#A78BFA, #C4B5FD, #A78BFA);
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            background: var(--bg-color);
+            border-radius: 50%;
         }
 
-        /* Custom gradient for buttons and charts */
-        .purple-gradient {
-            background-image: linear-gradient(to right, #8B5CF6, #6D28D9);
+        /* Inputs & Buttons */
+        input, select, textarea {
+            background: rgba(30, 32, 45, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #e5e7eb !important;
+            border-radius: 1rem !important;
+            padding: 0.9rem 1.1rem !important;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+            transition: all 0.25s ease;
         }
+        input:focus, select:focus, textarea:focus {
+            outline: none !important;
+            border-color: #A78BFA !important;
+            background: rgba(45, 48, 65, 0.8) !important;
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5), inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        button.purple-gradient {
+            background-image: linear-gradient(to right, #8B5CF6, #6D28D9);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            border: none !important;
+        }
+        button.purple-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+        button.purple-gradient:active {
+            transform: translateY(0px) scale(0.98);
+            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+        }
+
         .purple-gradient-text {
-            background: linear-gradient(to right, #A78BFA, #C4B5FD);
+            background: linear-gradient(to right, #C4B5FD, #A78BFA);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-        
-        /* Base styles for UI cards */
-        .ui-card {
-            background-color: #1A1C20;
-            border-radius: 1.25rem; /* 20px */
-            padding: 1rem; /* 16px */
-            border: 1px solid #2D3748;
-            animation: fadeInUp 0.5s ease-out forwards;
-            opacity: 0;
-            display: flex;
-            flex-direction: column;
-            margin: 0 !important;
-            box-shadow: 0 2px 16px 0 #00000014;
-            /* Modern shadow for floating effect */
-        }
-        
-        /* Animation for cards */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .ui-card:hover {
-            transform: translateY(-2px);
-            transition: transform 0.2s ease-in-out;
+            text-shadow: 0 2px 10px rgba(196, 181, 253, 0.2);
         }
 
-        /* Shake animation for error feedback */
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translateX(-2px);}
-            20%, 80% { transform: translateX(4px);}
-            30%, 50%, 70% { transform: translateX(-6px);}
-            40%, 60% { transform: translateX(6px);}
+        /* Modals */
+        #confirmation-modal, #info-modal {
+            background: rgba(13, 15, 18, 0.5) !important;
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            animation: modal-bg-fade-in 0.4s ease forwards;
         }
         
-        /* Styling for input fields with errors */
-        .input-error {
-            box-shadow: 0 0 0 2px #ef4444 !important;
-            background: rgba(239,68,68,0.08) !important;
-            transition: box-shadow 0.2s, background 0.2s;
+        #confirmation-modal .ui-card, #info-modal .ui-card {
+            animation: modal-content-in 0.4s cubic-bezier(.21,.63,.35,1) forwards;
         }
-        nav {
-            box-shadow: 0 0 16px 0 #00000033;
-            /* Modern floating effect */
+        
+        @keyframes modal-bg-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modal-content-in {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .nav-item {
-            border-radius: 1rem;
-            min-width: 0;
-            flex-basis: 0;
-            flex-grow: 1;
-            color: #9CA3AF;
-            font-weight: 500;
-            transition: background 0.18s, color 0.18s;
+
+        /* Page Transitions */
+        .page {
+            display: none;
+            animation: page-fade-out 0.3s ease forwards;
         }
-        .nav-item.active, .nav-item:active {
-            background: linear-gradient(90deg, #8B5CF6 0%, #6D28D9 100%);
-            color: #fff !important;
-        }
-        .nav-item.active i, .nav-item.active span {
-            color: #fff !important;
-        }
-        .nav-item i {
+        .page.active {
             display: block;
-            margin: 0 auto;
-            color: inherit;
+            animation: page-fade-in 0.5s ease forwards;
         }
-        .nav-item span {
-            font-size: 0.75rem;
-            color: inherit;
-            margin-top: 0.1rem;
-            font-weight: 600;
-            letter-spacing: 0.01em;
+        @keyframes page-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 600px) {
-            nav {
-                max-width: 100vw;
-                left: 0;
-                right: 0;
-                border-radius: 1.25rem 1.25rem 0 0;
-            }
+        @keyframes page-fade-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
         }
-        .ui-card {
-            /* ...existing code... */
-            margin: 0 !important;
-            box-shadow: 0 2px 16px 0 #00000014;
-            /* Modern shadow for floating effect */
+
+        /* General Page Styling */
+        #page-log, #page-admin {
+            padding: 1.1rem !important;
         }
-        .grid {
-            gap: 1rem !important; /* 16px mezera mezi dlaždicemi */
+        #page-log h1, #page-admin h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem !important;
         }
-        @media (max-width: 600px) {
-            .grid {
-                gap: 0.75rem !important; /* 12px mezera na menších displejích */
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
-            }
-            .ui-card {
-                border-radius: 1rem !important;
-            }
+        #page-log h2, #page-admin h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem !important;
+            border-left: 3px solid #A78BFA;
+            padding-left: 0.75rem;
+        }
+        
+        #log-tasks-container > div,
+        #logged-today-container > div,
+        #admin-tasks-list > div {
+            background: rgba(45,55,72,0.55) !important;
+            border-radius: 1.25rem !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-bottom: 0.8rem !important;
+            padding: 1rem 1.25rem !important;
+            transition: all 0.25s ease;
+        }
+        
+        #log-tasks-container > div:hover,
+        #admin-tasks-list > div:hover {
+            transform: translateX(5px);
+            border-color: rgba(167, 139, 250, 0.5) !important;
         }
     </style>
 </head>
-<body class="text-gray-200 antialiased bg-[#0D0F12]">
+<body class="text-gray-200 antialiased">
 
     <!-- Main Application Container -->
     <div id="app" class="max-w-lg mx-auto flex flex-col">
@@ -243,14 +329,14 @@
                 <h1 class="text-5xl font-extrabold text-white mb-2">Life<span class="purple-gradient-text">XP</span></h1>
                 <p class="text-gray-400 mb-8">Vítejte zpět!</p>
                 <form id="login-form" class="space-y-4">
-                    <input type="email" id="login-email" class="w-full bg-[#1A1C20] border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all duration-200" placeholder="E-mail" required autocomplete="username">
+                    <input type="email" id="login-email" class="w-full" placeholder="E-mail" required autocomplete="username">
                     <div class="relative">
-                        <input type="password" id="login-password" class="w-full bg-[#1A1C20] border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 pr-12 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all duration-200" placeholder="Heslo" required autocomplete="current-password">
+                        <input type="password" id="login-password" class="w-full pr-12" placeholder="Heslo" required autocomplete="current-password">
                         <button type="button" class="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-violet-400 transition-colors focus:outline-none" data-target="login-password">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-2xl text-lg hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-purple-500/20">
+                    <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-2xl text-lg">
                         Přihlásit se
                     </button>
                 </form>
@@ -266,20 +352,20 @@
                 <h1 class="text-5xl font-extrabold text-white mb-2">Life<span class="purple-gradient-text">XP</span></h1>
                 <p class="text-gray-400 mb-8">Vytvořte si nový účet</p>
                 <form id="register-form" class="space-y-4">
-                    <input type="email" id="register-email" class="w-full bg-[#1A1C20] border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all duration-200" placeholder="E-mail" required autocomplete="username">
+                    <input type="email" id="register-email" class="w-full" placeholder="E-mail" required autocomplete="username">
                     <div class="relative">
-                        <input type="password" id="register-password" class="w-full bg-[#1A1C20] border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 pr-12 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all duration-200" placeholder="Heslo" required autocomplete="new-password">
+                        <input type="password" id="register-password" class="w-full pr-12" placeholder="Heslo" required autocomplete="new-password">
                         <button type="button" class="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-violet-400 transition-colors focus:outline-none" data-target="register-password">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
                     <div class="relative">
-                        <input type="password" id="register-password-confirm" class="w-full bg-[#1A1C20] border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 pr-12 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all duration-200" placeholder="Potvrzení hesla" required autocomplete="new-password">
+                        <input type="password" id="register-password-confirm" class="w-full pr-12" placeholder="Potvrzení hesla" required autocomplete="new-password">
                         <button type="button" class="password-toggle absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-violet-400 transition-colors focus:outline-none" data-target="register-password-confirm">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-2xl text-lg hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-purple-500/20">
+                    <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-2xl text-lg">
                         Zaregistrovat se
                     </button>
                 </form>
@@ -295,29 +381,25 @@
         <!-- Main Content Area -->
         <div id="main-content" class="hidden flex-grow w-full flex flex-col">
             <!-- Top Navigation Bar -->
-            <nav class="fixed bottom-0 left-0 right-0 z-40 w-full max-w-lg mx-auto bg-[#181924] border-t border-[#23243a] flex justify-between items-center px-2 py-1"
-                 style="height: 60px; border-radius: 1.25rem 1.25rem 0 0;">
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1 transition-colors duration-200" data-page="dashboard">
-                    <i data-lucide="home" class="w-7 h-7"></i>
-                    <span class="text-xs mt-1">Přehled</span>
+            <nav class="fixed top-0 left-0 right-0 z-40 w-full max-w-lg mx-auto flex justify-around items-center px-2 py-2"
+                 style="height: 60px; padding-top: env(safe-area-inset-top, 12px);">
+                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
+                    <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                    <span class="text-xs">Přehled</span>
                 </a>
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1 transition-colors duration-200" data-page="log">
-                    <i data-lucide="check-square" class="w-7 h-7"></i>
-                    <span class="text-xs mt-1">Denní</span>
+                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="log">
+                    <i data-lucide="check-square" class="w-6 h-6"></i>
+                    <span class="text-xs">Denní</span>
                 </a>
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1 transition-colors duration-200" data-page="stats">
-                    <i data-lucide="bar-chart-3" class="w-7 h-7"></i>
-                    <span class="text-xs mt-1">Statistiky</span>
-                </a>
-                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1 transition-colors duration-200" data-page="admin">
-                    <i data-lucide="settings" class="w-7 h-7"></i>
-                    <span class="text-xs mt-1">Správa</span>
+                <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="admin">
+                    <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
+                    <span class="text-xs">Správa</span>
                 </a>
             </nav>
 
-            <main style="padding-bottom: 64px;">
+            <main style="padding-top: 72px; padding-bottom: 0;">
                 <!-- Page: Dashboard -->
-                <div id="page-dashboard">
+                <div id="page-dashboard" class="page">
                     <div class="grid grid-cols-2 grid-rows-4 gap-4 h-full px-2 pt-2 pb-4">
                         <!-- 1. řádek: Obdélník (XP za 7 dní) -->
                         <div class="ui-card col-span-2 flex flex-col justify-center items-center">
@@ -325,20 +407,14 @@
                             <div class="flex-grow w-full flex flex-col items-center justify-center">
                                 <canvas id="xp-chart" style="max-width:100%;max-height:70px;"></canvas>
                                 <div class="flex w-full justify-between mt-1 px-1 text-[11px] text-gray-400 font-semibold select-none pointer-events-none">
-                                    <span>Po</span>
-                                    <span>Út</span>
-                                    <span>St</span>
-                                    <span>Čt</span>
-                                    <span>Pá</span>
-                                    <span>So</span>
-                                    <span>Ne</span>
+                                    <span>Po</span><span>Út</span><span>St</span><span>Čt</span><span>Pá</span><span>So</span><span>Ne</span>
                                 </div>
                             </div>
                         </div>
                         <!-- 2. řádek: 2x Čtverec (Celkové XP & Radar) -->
                         <div class="ui-card flex flex-col items-center justify-center">
                             <p class="text-xs text-gray-400 mb-1">Celkové XP</p>
-                            <span id="total-xp-display" class="text-3xl font-extrabold purple-gradient-text flex-grow flex items-center justify-center"></span>
+                            <span id="total-xp-display" class="text-4xl font-extrabold purple-gradient-text flex-grow flex items-center justify-center"></span>
                         </div>
                         <div class="ui-card flex flex-col items-center justify-center">
                             <p class="text-xs text-gray-400 mb-1">Rozložení kategorií</p>
@@ -371,99 +447,79 @@
                 </div>
 
                 <!-- Page: Daily Log -->
-                <div id="page-log" class="hidden">
-                     <h1 class="text-3xl font-bold mb-6">Denní záznam</h1>
-                     <div class="ui-card mb-6">
+                <div id="page-log" class="page">
+                    <h1 class="font-bold">Denní záznam</h1>
+                    <div class="ui-card mb-6">
                         <label for="log-date" class="block text-sm font-medium text-gray-400 mb-2">Datum záznamu</label>
-                        <input type="date" id="log-date" class="w-full bg-[#2D3748] border-gray-600 text-white rounded-lg p-3 focus:ring-violet-500 focus:border-violet-500">
-                     </div>
-                     
-                     <div class="space-y-4">
+                        <input type="date" id="log-date" class="w-full">
+                    </div>
+                    <div class="space-y-4">
                         <div>
-                             <h2 class="text-xl font-semibold mb-3">Dostupné úkoly</h2>
-                             <div id="log-tasks-container" class="space-y-3"></div>
+                            <h2 class="font-semibold">Dostupné úkoly</h2>
+                            <div id="log-tasks-container" class="space-y-3"></div>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold mt-8 mb-3">Dnes zaznamenáno</h2>
+                            <h2 class="font-semibold">Dnes zaznamenáno</h2>
                             <div id="logged-today-container" class="space-y-2"></div>
                         </div>
-                     </div>
+                    </div>
                 </div>
 
                 <!-- Page: Admin -->
-                <div id="page-admin" class="hidden">
-                    <h1 class="text-3xl font-bold mb-6">Správa</h1>
+                <div id="page-admin" class="page">
+                    <h1 class="font-bold">Správa</h1>
                     <div class="ui-card mb-6">
-                        <h2 class="text-xl font-semibold mb-4">Upravit Profil</h2>
+                        <h2 class="font-semibold">Upravit Profil</h2>
                         <form id="edit-profile-form" class="space-y-4">
-                            <input type="text" id="profile-nickname" placeholder="Vaše přezdívka" class="w-full bg-[#2D3748] border-gray-600 rounded-lg p-3" required>
-                            <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-lg transition-opacity hover:opacity-90">Uložit přezdívku</button>
+                            <input type="text" id="profile-nickname" placeholder="Vaše přezdívka" class="w-full" required>
+                            <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-lg">Uložit přezdívku</button>
                         </form>
                     </div>
-
                     <div class="ui-card mb-6">
-                        <h2 class="text-xl font-semibold mb-4">Přidat nový úkol</h2>
+                        <h2 class="font-semibold">Přidat nový úkol</h2>
                         <form id="add-task-form" class="space-y-4">
-                            <input type="text" id="task-name" placeholder="Název úkolu" class="w-full bg-[#2D3748] border-gray-600 rounded-lg p-3" required>
-                            <select id="task-category" class="w-full bg-[#2D3748] border-gray-600 rounded-lg p-3" required>
+                            <input type="text" id="task-name" placeholder="Název úkolu" class="w-full" required>
+                            <select id="task-category" class="w-full" required>
                                 <option value="Mind">Mind</option>
                                 <option value="Body">Body</option>
                                 <option value="Work">Work</option>
                                 <option value="Social">Social</option>
                                 <option value="Extra">Extra</option>
                             </select>
-                            <input type="number" id="task-xp" placeholder="XP body (+/-)" class="w-full bg-[#2D3748] border-gray-600 rounded-lg p-3" required>
-                            <input type="number" id="task-goal" placeholder="Týdenní cíl (např. 5)" class="w-full bg-[#2D3748] border-gray-600 rounded-lg p-3">
-                            <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-lg transition-opacity hover:opacity-90">Přidat úkol</button>
+                            <input type="number" id="task-xp" placeholder="XP body (+/-)" class="w-full" required>
+                            <input type="number" id="task-goal" placeholder="Týdenní cíl (např. 5)" class="w-full">
+                            <button type="submit" class="w-full purple-gradient text-white font-bold py-3 px-4 rounded-lg">Přidat úkol</button>
                         </form>
                     </div>
-                    
-                    <h2 class="text-xl font-semibold mb-4">Seznam úkolů</h2>
+                    <h2 class="font-semibold mb-4">Seznam úkolů</h2>
                     <div id="admin-tasks-list" class="space-y-3"></div>
-
-                    <!-- Odhlášení tlačítko dole -->
                     <div class="mt-10 flex justify-center">
-                        <button id="logout-btn" class="w-full max-w-xs bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200">
+                        <button id="logout-btn" class="w-full max-w-xs bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg">
                             <i data-lucide="log-out" class="inline-block align-middle mr-2"></i> Odhlásit se
                         </button>
                     </div>
                 </div>
 
-                <!-- Page: Statistics -->
-                <div id="page-stats" class="hidden">
-                    <h1 class="text-3xl font-bold mb-6">Statistiky</h1>
-                     <div class="ui-card mb-6">
-                        <h2 class="text-lg font-semibold mb-3">Celkové XP podle kategorií</h2>
-                        <div class="h-64 flex justify-center items-center">
-                            <canvas id="category-pie-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="ui-card">
-                        <h2 class="text-lg font-semibold mb-3">Týdenní aktivita</h2>
-                        <div id="heatmap-container" class="grid grid-cols-7 gap-2 text-center text-xs">
-                        </div>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
     
     <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div id="confirmation-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
         <div class="ui-card w-full max-w-sm text-center">
             <h3 id="modal-title" class="text-lg font-bold mb-4">Opravdu smazat?</h3>
             <p id="modal-text" class="text-gray-400 mb-6">Tuto akci nelze vrátit zpět.</p>
             <div class="flex gap-4">
-                <button id="modal-cancel" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">Zrušit</button>
-                <button id="modal-confirm" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">Smazat</button>
+                <button id="modal-cancel" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Zrušit</button>
+                <button id="modal-confirm" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg">Smazat</button>
             </div>
         </div>
     </div>
 
     <!-- Info Modal -->
-    <div id="info-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div id="info-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
         <div class="ui-card w-full max-w-md text-center relative">
-            <button id="info-modal-close" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+            <button id="info-modal-close" class="absolute top-4 right-4 text-gray-500 hover:text-white">
                 <i data-lucide="x"></i>
             </button>
             <h3 id="info-modal-title" class="text-2xl font-bold mb-4 purple-gradient-text"></h3>
@@ -501,17 +557,15 @@
         let tasks = [];
         let logs = [];
         let xpChart = null;
-        let categoryPieChart = null;
         let weeklyGoalChart = null;
         let radarChart = null;
-        let weeklyCategoryBarChart = null; // New chart variable
+        let weeklyCategoryBarChart = null;
         let confirmCallback = null;
 
         const pages = {
             dashboard: document.getElementById('page-dashboard'),
             log: document.getElementById('page-log'),
-            admin: document.getElementById('page-admin'),
-            stats: document.getElementById('page-stats')
+            admin: document.getElementById('page-admin')
         };
         const navItems = document.querySelectorAll('.nav-item');
         const logDateInput = document.getElementById('log-date');
@@ -660,9 +714,13 @@
 
         // --- NAVIGATION ---
         function navigateTo(pageId) {
+            if (currentPage === pageId && pages[pageId] && pages[pageId].classList.contains('active')) return;
+            
             currentPage = pageId;
-            Object.values(pages).forEach(p => p.classList.add('hidden'));
-            pages[pageId].classList.remove('hidden');
+            Object.values(pages).forEach(p => p.classList.remove('active'));
+            if (pages[pageId]) {
+                pages[pageId].classList.add('active');
+            }
             navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
             
             const mainEl = document.querySelector('main');
@@ -717,11 +775,11 @@
         // --- RENDERING LOGIC ---
         function renderPageContent() {
             if (!userId) return;
+            // Only render the content of the current page
             switch (currentPage) {
-                case 'dashboard': renderDashboard(); break;
-                case 'log': renderLogPage(); break;
-                case 'admin': renderAdminPage(); break;
-                case 'stats': renderStatsPage(); break;
+                case 'dashboard': if(pages.dashboard.classList.contains('active')) renderDashboard(); break;
+                case 'log': if(pages.log.classList.contains('active')) renderLogPage(); break;
+                case 'admin': if(pages.admin.classList.contains('active')) renderAdminPage(); break;
             }
             lucide.createIcons();
         }
@@ -748,7 +806,7 @@
             renderXpChart();
             renderWeeklyGoalChart();
             renderCategoryRadarChart();
-            renderWeeklyCategoryBarChart(); // New chart render call
+            renderWeeklyCategoryBarChart();
         }
 
         function renderCategoryRadarChart() {
@@ -764,27 +822,26 @@
                     labels: Object.keys(categoryColors),
                     datasets: [{
                         data: data,
-                        backgroundColor: 'rgba(167,139,250,0.18)',
+                        backgroundColor: 'rgba(167,139,250,0.25)',
                         borderColor: '#A78BFA',
                         borderWidth: 2,
-                        pointBackgroundColor: Object.values(categoryColors),
-                        pointRadius: 2,
-                        pointHoverRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#A78BFA',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
                         fill: true,
-                        tension: 0.3
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    animation: { duration: 600, easing: 'easeOutQuart' },
+                    animation: { duration: 800, easing: 'easeOutCubic' },
                     scales: {
                         r: {
-                            angleLines: { color: '#2D3748' },
-                            grid: { color: '#2D3748' },
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
                             pointLabels: { color: '#C4B5FD', font: { size: 10, weight: 'bold' } },
-                            ticks: { display: false, stepSize: Math.max(...data) > 0 ? Math.max(...data) / 2 : 1 }
+                            ticks: { display: false, stepSize: Math.max(...data) > 0 ? Math.ceil(Math.max(...data) / 3) : 1, backdropColor: 'transparent' }
                         }
                     }
                 }
@@ -796,7 +853,7 @@
             const tasksWithGoals = tasks.filter(t => t.goalFrequency > 0);
             const textEl = document.getElementById('weekly-goal-text').firstElementChild;
             if (tasksWithGoals.length === 0) {
-                textEl.textContent = 'Žádné cíle';
+                textEl.textContent = 'N/A';
                 if (window.weeklyGoalChart) window.weeklyGoalChart.destroy();
                 return;
             }
@@ -819,8 +876,8 @@
                 data: {
                     datasets: [{
                         data: [completedCount, Math.max(0, totalGoal - completedCount)],
-                        backgroundColor: ['#A78BFA', '#2D3748'],
-                        borderColor: '#1A1C20', borderWidth: 3, borderRadius: 6, cutout: '80%',
+                        backgroundColor: ['#A78BFA', 'rgba(255,255,255,0.1)'],
+                        borderColor: 'transparent', borderWidth: 0, borderRadius: 8, cutout: '80%',
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
@@ -829,7 +886,6 @@
 
         function renderXpChart() {
             const ctx = document.getElementById('xp-chart').getContext('2d');
-            // Days of week in Czech, starting Monday
             const dayLabels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
             const labels = [...Array(7)].map((_, i) => {
                 const d = new Date();
@@ -838,9 +894,7 @@
             });
             const data = labels.map(date => {
                 const dateString = date.toISOString().split('T')[0];
-                return logs
-                    .filter(log => log.date === dateString)
-                    .reduce((sum, log) => sum + log.xp, 0);
+                return logs.filter(log => log.date === dateString).reduce((sum, log) => sum + log.xp, 0);
             });
             if (window.xpChart) window.xpChart.destroy();
             const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
@@ -851,90 +905,48 @@
                 data: {
                     labels: dayLabels,
                     datasets: [{
-                        label: 'XP',
-                        data: data,
-                        borderColor: '#A78BFA',
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#A78BFA',
-                        pointBorderColor: '#A78BFA',
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
+                        label: 'XP', data: data, borderColor: '#A78BFA',
+                        backgroundColor: gradient, fill: true, tension: 0.4,
+                        pointBackgroundColor: '#fff', pointBorderColor: '#A78BFA',
+                        pointRadius: 3, pointHoverRadius: 5,
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: {
-                        x: {
-                            display: false // labels are shown below the chart as custom HTML
-                        },
-                        y: { display: false }
-                    }
+                    scales: { x: { display: false }, y: { display: false } }
                 }
             });
         }
 
-        // New function for the weekly category bar chart
         function renderWeeklyCategoryBarChart() {
             const ctx = document.getElementById('weekly-category-barchart')?.getContext('2d');
             if (!ctx) return;
 
             const { start } = getWeekDateRange(new Date());
             const startOfWeekString = start.toISOString().split('T')[0];
-            
             const thisWeekLogs = logs.filter(l => l.date >= startOfWeekString && l.xp > 0);
-
             const data = Object.keys(categoryColors).map(cat =>
                 thisWeekLogs.filter(l => l.category === cat).reduce((sum, l) => sum + l.xp, 0)
             );
             const labels = Object.keys(categoryColors);
 
-            if (window.weeklyCategoryBarChart) {
-                window.weeklyCategoryBarChart.destroy();
-            }
-
+            if (window.weeklyCategoryBarChart) window.weeklyCategoryBarChart.destroy();
             window.weeklyCategoryBarChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: Object.values(categoryColors),
-                        borderRadius: 4,
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: Object.values(categoryColors), borderRadius: 4 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y', // Horizontal bars
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    },
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
                         x: {
                             beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.05)',
-                                borderColor: 'transparent'
-                            },
-                            ticks: {
-                                color: '#9CA3AF',
-                                font: { size: 10 }
-                            }
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', borderColor: 'transparent' },
+                            ticks: { color: '#9CA3AF', font: { size: 10 } }
                         },
                         y: {
-                            grid: {
-                                display: false,
-                                borderColor: 'transparent'
-                            },
-                            ticks: {
-                                color: '#9CA3AF',
-                                font: { size: 10 }
-                            }
+                            grid: { display: false, borderColor: 'transparent' },
+                            ticks: { color: '#9CA3AF', font: { size: 10 } }
                         }
                     }
                 }
@@ -954,7 +966,7 @@
             tasks.forEach(task => {
                 const isLogged = loggedTaskIdsForDate.includes(task.id);
                 const taskEl = document.createElement('div');
-                taskEl.className = `flex items-center justify-between p-4 rounded-xl transition-all duration-200 ${isLogged ? 'bg-green-500/20' : 'bg-[#2D3748]'}`;
+                taskEl.className = `flex items-center justify-between`;
                 taskEl.innerHTML = `
                     <div class="flex items-center gap-4">
                         <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
@@ -972,12 +984,12 @@
 
             const logsForDate = logs.filter(l => l.date === selectedDate);
             if (logsForDate.length === 0) {
-                loggedTodayContainer.innerHTML = '<p class="text-gray-500 text-center">Dnes zatím žádné záznamy.</p>';
+                loggedTodayContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Dnes zatím žádné záznamy.</p>';
             } else {
                 logsForDate.forEach(log => {
                     const task = tasks.find(t => t.id === log.taskId);
                     const logEl = document.createElement('div');
-                    logEl.className = 'flex items-center justify-between bg-[#1A1C20] p-3 rounded-lg';
+                    logEl.className = 'flex items-center justify-between';
                     logEl.innerHTML = `
                         <p>${task ? task.name : 'Smazaný úkol'}</p>
                         <span class="font-bold ${log.xp > 0 ? 'text-green-400' : 'text-red-400'}">${log.xp > 0 ? '+' : ''}${log.xp} XP</span>
@@ -991,12 +1003,12 @@
             const tasksList = document.getElementById('admin-tasks-list');
             tasksList.innerHTML = '';
             if (tasks.length === 0) {
-                tasksList.innerHTML = '<p class="text-gray-500 text-center">Zatím nebyly přidány žádné úkoly.</p>';
+                tasksList.innerHTML = '<p class="text-gray-500 text-center py-4">Zatím nebyly přidány žádné úkoly.</p>';
                 return;
             }
             tasks.forEach(task => {
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between bg-[#2D3748] p-4 rounded-xl';
+                taskEl.className = 'flex items-center justify-between';
                 taskEl.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
@@ -1014,75 +1026,6 @@
                 `;
                 tasksList.appendChild(taskEl);
             });
-        }
-
-        function renderStatsPage() {
-            renderCategoryPieChart();
-            renderHeatmap();
-        }
-
-        function renderCategoryPieChart() {
-            const ctx = document.getElementById('category-pie-chart').getContext('2d');
-            const positiveLogs = logs.filter(l => l.xp > 0);
-            const data = Object.keys(categoryColors).map(cat => 
-                positiveLogs.filter(l => l.category === cat).reduce((sum, l) => sum + l.xp, 0)
-            );
-            
-            if(window.categoryPieChart) window.categoryPieChart.destroy();
-            window.categoryPieChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categoryColors),
-                    datasets: [{
-                        data: data,
-                        backgroundColor: Object.values(categoryColors),
-                        borderColor: '#1A1C20',
-                        borderWidth: 4,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#9CA3AF', font: { size: 12 } }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderHeatmap() {
-            const container = document.getElementById('heatmap-container');
-            container.innerHTML = '';
-            const days = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
-            days.forEach(day => container.innerHTML += `<div class="font-bold text-gray-500">${day}</div>`);
-            
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(endDate.getDate() - 34); // Approx 5 weeks
-            
-            const dailyXp = logs.reduce((acc, log) => {
-                acc[log.date] = (acc[log.date] || 0) + log.xp;
-                return acc;
-            }, {});
-
-            const maxXP = Math.max(...Object.values(dailyXp), 1);
-
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dateString = d.toISOString().split('T')[0];
-                const xp = dailyXp[dateString] || 0;
-                const intensity = xp > 0 ? Math.min(1, xp / (maxXP * 0.75)) : 0;
-                const color = `rgba(167, 139, 250, ${intensity})`;
-                
-                const dayEl = document.createElement('div');
-                dayEl.className = 'w-full aspect-square rounded-md flex items-center justify-center';
-                dayEl.style.backgroundColor = color;
-                dayEl.title = `${dateString}: ${xp} XP`;
-                container.appendChild(dayEl);
-            }
         }
 
         // --- EVENT LISTENERS ---
@@ -1172,10 +1115,8 @@
         async function handleDeleteTask(taskId) {
             if (!userId || !taskId) return;
             const batch = writeBatch(db);
-            // Delete the task
             const taskRef = doc(db, 'users', userId, 'tasks', taskId);
             batch.delete(taskRef);
-            // Delete all logs associated with the task
             const logsQuery = query(collection(db, 'users', userId, 'logs'), where("taskId", "==", taskId));
             const logsSnapshot = await getDocs(logsQuery);
             logsSnapshot.forEach(logDoc => {
