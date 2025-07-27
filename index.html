@@ -320,16 +320,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Drag and Drop styles */
-        .draggable {
-            cursor: grab;
-        }
-        .dragging {
-            opacity: 0.5;
-            background: rgba(60, 62, 80, 0.7);
-        }
-
     </style>
 </head>
 <body class="text-gray-200 antialiased">
@@ -766,7 +756,7 @@
             if(!userId) return;
             const profileDocRef = doc(db, 'users', userId, 'profile', 'data');
             onSnapshot(profileDocRef, (docSnap) => {
-                userProfile = docSnap.exists() ? docSnap.data() : { nickname: 'Nováček', lastWeeklySummary: '' };
+                userProfile = docSnap.exists() ? docSnap.data() : { nickname: 'Nováček', lastWeeklySummary: '', lastXpMilestone: 0 };
                 if (!docSnap.exists()) setDoc(profileDocRef, userProfile);
                 document.getElementById('profile-nickname').value = userProfile.nickname || '';
             });
@@ -788,6 +778,7 @@
             onSnapshot(logsCollection, (snapshot) => {
                 logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPageContent();
+                checkXpMilestone();
             });
         }
 
@@ -824,7 +815,13 @@
             Object.entries(dailyXp).forEach(([date, xp]) => {
                 if (xp > bestDay.xp) bestDay = { date, xp };
             });
-            document.getElementById('best-day-xp').textContent = bestDay.xp > 0 ? `${bestDay.xp} XP` : 'Žádná data';
+
+            const todayString = new Date().toISOString().split('T')[0];
+            if (!dailyXp[todayString]) {
+                 document.getElementById('best-day-xp').innerHTML = `<span class="text-sm text-center text-gray-400">Dnes zatím žádný záznam.</span>`;
+            } else {
+                 document.getElementById('best-day-xp').textContent = bestDay.xp > 0 ? `${bestDay.xp} XP` : 'Žádná data';
+            }
 
             renderXpChart();
             renderWeeklyGoalChart();
@@ -1000,19 +997,21 @@
 
             const loggedTaskIdsForDate = logs.filter(l => l.date === selectedDate).map(l => l.taskId);
 
-            tasks.forEach(task => {
+            tasks.forEach((task, index) => {
                 const isLogged = loggedTaskIdsForDate.includes(task.id);
                 const taskEl = document.createElement('div');
-                taskEl.className = 'flex items-center justify-between p-3 rounded-2xl bg-gray-800/50 border border-gray-700/50 draggable';
-                taskEl.setAttribute('draggable', 'true');
+                taskEl.className = 'flex items-center justify-between p-3 rounded-2xl bg-gray-800/50 border border-gray-700/50';
                 taskEl.dataset.taskId = task.id;
 
                 taskEl.innerHTML = `
                     <div class="flex items-center gap-4 flex-grow">
-                        <i data-lucide="grip-vertical" class="cursor-grab text-gray-500"></i>
                         <div style="color: ${categoryColors[task.category]}">${categoryIcons[task.category]}</div>
                         <p class="font-semibold text-white flex-grow">${task.name}</p>
                         <p class="text-sm font-semibold w-20 text-right ${task.xp > 0 ? 'text-green-400' : 'text-red-400'}">${task.xp > 0 ? '+' : ''}${task.xp} XP</p>
+                    </div>
+                    <div class="flex flex-col ml-2">
+                        <button class="order-btn" data-direction="up" ${index === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-5 h-5 ${index === 0 ? 'text-gray-600' : 'text-gray-400'}"></i></button>
+                        <button class="order-btn" data-direction="down" ${index === tasks.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-5 h-5 ${index === tasks.length - 1 ? 'text-gray-600' : 'text-gray-400'}"></i></button>
                     </div>
                     <button data-task-id="${task.id}" class="log-task-btn p-2 rounded-full ${isLogged ? 'bg-gray-600' : 'purple-gradient'} ml-2">
                         <i data-lucide="${isLogged ? 'rotate-ccw' : 'plus'}" class="w-6 h-6 text-white"></i>
@@ -1070,9 +1069,9 @@
 
             const tasksContainer = document.getElementById('log-tasks-container');
             tasksContainer.addEventListener('click', async e => {
-                const button = e.target.closest('.log-task-btn');
-                if (button) {
-                    const taskId = button.dataset.taskId;
+                const logButton = e.target.closest('.log-task-btn');
+                if (logButton) {
+                    const taskId = logButton.dataset.taskId;
                     const selectedDate = logDateInput.value;
                     const existingLog = logs.find(l => l.date === selectedDate && l.taskId === taskId);
                     if (existingLog) await deleteDoc(doc(db, 'users', userId, 'logs', existingLog.id));
@@ -1081,47 +1080,13 @@
                         if (task) await addDoc(collection(db, 'users', userId, 'logs'), { taskId: task.id, date: selectedDate, xp: task.xp, category: task.category, timestamp: serverTimestamp() });
                     }
                 }
-            });
 
-            // --- Drag and Drop Logic for Task Reordering ---
-            let draggedItem = null;
-
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
-
-            tasksContainer.addEventListener('dragstart', e => {
-                draggedItem = e.target;
-                setTimeout(() => draggedItem.classList.add('dragging'), 0);
-            });
-
-            tasksContainer.addEventListener('dragend', () => {
-                if(draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                    updateTaskOrder();
-                    draggedItem = null;
-                }
-            });
-
-            tasksContainer.addEventListener('dragover', e => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(tasksContainer, e.clientY);
-                const dragging = document.querySelector('.dragging');
-                if (dragging) {
-                    if (afterElement == null) {
-                        tasksContainer.appendChild(dragging);
-                    } else {
-                        tasksContainer.insertBefore(dragging, afterElement);
-                    }
+                const orderButton = e.target.closest('.order-btn');
+                if (orderButton && !orderButton.disabled) {
+                    const taskEl = orderButton.closest('[data-task-id]');
+                    const taskId = taskEl.dataset.taskId;
+                    const direction = orderButton.dataset.direction;
+                    moveTask(taskId, direction);
                 }
             });
 
@@ -1162,12 +1127,19 @@
             }
         }
 
-        async function updateTaskOrder() {
-            const taskElements = [...document.getElementById('log-tasks-container').children];
+        async function moveTask(taskId, direction) {
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex === -1) return;
+
+            const newIndex = direction === 'up' ? taskIndex - 1 : taskIndex + 1;
+            if (newIndex < 0 || newIndex >= tasks.length) return;
+
+            // Swap positions
+            [tasks[taskIndex], tasks[newIndex]] = [tasks[newIndex], tasks[taskIndex]];
+            
             const batch = writeBatch(db);
-            taskElements.forEach((el, index) => {
-                const taskId = el.dataset.taskId;
-                const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+            tasks.forEach((task, index) => {
+                const taskRef = doc(db, 'users', userId, 'tasks', task.id);
                 batch.update(taskRef, { order: index });
             });
             await batch.commit();
@@ -1269,6 +1241,18 @@
                 showInfoModal('Týdenní shrnutí', `Minulý týden jsi získal(a) ${totalXp} XP!\nDokončil(a) jsi ${tasksCompleted} úkolů.\nNejvíce jsi se zaměřil(a) na kategorie: ${categories}.\n\nJen tak dál!`);
             }
             await setDoc(doc(db, 'users', userId, 'profile', 'data'), { lastWeeklySummary: weekId }, { merge: true });
+        }
+
+        async function checkXpMilestone() {
+            const totalXp = logs.reduce((sum, log) => sum + log.xp, 0);
+            const lastMilestone = userProfile.lastXpMilestone || 0;
+            const newMilestone = Math.floor(totalXp / 1000) * 1000;
+
+            if (newMilestone > lastMilestone && newMilestone > 0) {
+                showInfoModal('Gratulujeme!', `Dosáhl(a) jsi milníku ${newMilestone.toLocaleString('cs-CZ')} XP! Skvělá práce!`);
+                const profileDocRef = doc(db, 'users', userId, 'profile', 'data');
+                await setDoc(profileDocRef, { lastXpMilestone: newMilestone }, { merge: true });
+            }
         }
         
     </script>
