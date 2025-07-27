@@ -320,6 +320,21 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 0 0 4px rgba(199, 172, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.1);
+                text-shadow: 0 0 12px rgba(199, 172, 255, 0.7);
+            }
+        }
+        .info-icon-pulse {
+            animation: pulse-glow 3s infinite cubic-bezier(.4,0,.6,1);
+        }
+
     </style>
 </head>
 <body class="text-gray-200 antialiased">
@@ -491,7 +506,12 @@
                 </div>
 
                 <div id="page-admin" class="page">
-                    <h1 class="font-bold">Správa</h1>
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="font-bold">Správa</h1>
+                        <button id="show-help-modal" class="text-violet-400 hover:text-violet-300 info-icon-pulse">
+                            <i data-lucide="info" class="w-7 h-7"></i>
+                        </button>
+                    </div>
                     <div class="ui-card mb-6">
                         <h2 class="font-semibold">Upravit Profil</h2>
                         <form id="edit-profile-form" class="space-y-4">
@@ -1112,6 +1132,7 @@
                 if (confirmCallback) confirmCallback();
                 hideConfirmationModal();
             });
+            document.getElementById('show-help-modal').addEventListener('click', showHelpInfo);
         }
         
         async function handleAddTask(e) {
@@ -1201,6 +1222,23 @@
         function showInstallPrompt() {
             showInfoModal('Přidejte si LifeXP na plochu', 'Pro nejlepší zážitek si aplikaci přidejte na plochu.\n\nPostup:\n1. V prohlížeči klepněte na Sdílet.\n2. Vyberte "Přidat na plochu".');
         }
+        
+        function showHelpInfo() {
+            const title = "Vítejte v LifeXP!";
+            const text = `
+                Tato aplikace vám pomůže sledovat vaše návyky a produktivitu hravou formou.
+
+                **Jak začít:**
+                1.  **Vytvořte si úkoly:** Na této stránce ("Správa") si přidejte všechny aktivity, které chcete sledovat. Každému úkolu přiřaďte kategorii a XP body, které odráží jeho důležitost nebo náročnost.
+
+                2.  **Zaznamenávejte pokrok:** Každý den na stránce "Denní" jednoduše označte splněné úkoly.
+
+                3.  **Sledujte výsledky:** Na hlavní stránce "Přehled" uvidíte svůj pokrok v přehledných grafech. Zjistíte tak, jak jste produktivní a kterým oblastem se věnujete nejvíce. Některé grafy zobrazí po kliknutí ještě více detailů!
+
+                Cílem je gamifikovat váš život a motivovat vás k lepším výkonům. Hodně štěstí!
+            `;
+            showInfoModal(title, text);
+        }
 
         function getWeekDateRange(date) {
             const start = new Date(date);
@@ -1269,3 +1307,4 @@
 
 </body>
 </html>
+
