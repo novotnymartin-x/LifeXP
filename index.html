@@ -73,9 +73,6 @@
         }
 
         #app {
-            padding-right: env(safe-area-inset-right, 8px);
-            padding-bottom: env(safe-area-inset-bottom, 16px);
-            padding-left: env(safe-area-inset-left, 8px);
             height: 100dvh;
             box-sizing: border-box;
         }
@@ -84,7 +81,7 @@
             flex-grow: 1;
             overflow-y: auto;
             height: 1px;
-            padding-bottom: 0 !important;
+            padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 8px) 0 env(safe-area-inset-left, 8px);
         }
 
         #page-dashboard { height: 100%; overflow: hidden; }
@@ -146,9 +143,9 @@
             .ui-card { border-radius: 1.25rem !important; padding: 1rem !important; }
         }
 
-        nav {
+        nav#bottom-nav {
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
             z-index: 40;
@@ -157,14 +154,9 @@
             box-shadow: 0 0 24px rgba(0,0,0,0.5);
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0 0 1.5rem 1.5rem;
-        }
-        
-        .nav-content {
-            padding-top: env(safe-area-inset-top, 12px);
-            padding-left: env(safe-area-inset-left, 8px);
-            padding-right: env(safe-area-inset-right, 8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem 1.5rem 0 0;
+            padding-bottom: env(safe-area-inset-bottom, 12px);
         }
 
         .nav-item {
@@ -181,7 +173,8 @@
         .nav-item.active::after {
             content: '';
             position: absolute;
-            bottom: -5px; left: 50%;
+            top: -5px; 
+            left: 50%;
             transform: translateX(-50%);
             width: 24px;
             height: 4px;
@@ -404,23 +397,6 @@
 
         <!-- Main Content Area -->
         <div id="main-content" class="hidden flex-grow w-full flex flex-col">
-            <nav id="top-nav">
-                <div class="nav-content max-w-lg mx-auto flex justify-around items-center px-2 py-2">
-                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
-                        <i data-lucide="layout-grid" class="w-6 h-6"></i>
-                        <span class="text-xs">Přehled</span>
-                    </a>
-                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="log">
-                        <i data-lucide="check-square" class="w-6 h-6"></i>
-                        <span class="text-xs">Denní</span>
-                    </a>
-                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="admin">
-                        <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
-                        <span class="text-xs">Správa</span>
-                    </a>
-                </div>
-            </nav>
-
             <main>
                 <div id="page-dashboard" class="page">
                     <div class="grid grid-cols-2 grid-rows-4 gap-4 h-full px-2 pt-2 pb-4">
@@ -556,6 +532,22 @@
                 </div>
 
             </main>
+            <nav id="bottom-nav">
+                <div class="max-w-lg mx-auto flex justify-around items-center px-2 py-2">
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="dashboard">
+                        <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                        <span class="text-xs">Přehled</span>
+                    </a>
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="log">
+                        <i data-lucide="check-square" class="w-6 h-6"></i>
+                        <span class="text-xs">Denní</span>
+                    </a>
+                    <a href="#" class="nav-item flex-1 flex flex-col items-center justify-center py-1" data-page="admin">
+                        <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
+                        <span class="text-xs">Správa</span>
+                    </a>
+                </div>
+            </nav>
         </div>
     </div>
     
@@ -632,11 +624,11 @@
         };
 
         function adjustLayout() {
-            const nav = document.getElementById('top-nav');
+            const nav = document.getElementById('bottom-nav');
             const main = document.querySelector('main');
             if (nav && main) {
                 const navHeight = nav.offsetHeight;
-                main.style.paddingTop = `${navHeight}px`;
+                main.style.paddingBottom = `${navHeight}px`;
             }
         }
 
